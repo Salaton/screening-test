@@ -9,14 +9,20 @@ import (
 
 	"github.com/Salaton/screening-test.git/graph/generated"
 	"github.com/Salaton/screening-test.git/graph/model"
+	db "github.com/Salaton/screening-test.git/postgres"
 )
 
+//DB var Referencing our database
+var DB db.DBClient
+
 func (r *mutationResolver) CreateCustomer(ctx context.Context, input model.CustomerInput) (*model.Customer, error) {
-	panic(fmt.Errorf("not implemented"))
+	DB.CreateCustomer(input)
+	return &model.Customer{}, nil
 }
 
 func (r *mutationResolver) CreateOrder(ctx context.Context, input model.OrderInput) (*model.Order, error) {
-	panic(fmt.Errorf("not implemented"))
+	DB.CreateOrder(input)
+	return &model.Order{}, nil
 }
 
 func (r *queryResolver) Customers(ctx context.Context) ([]*model.Customer, error) {
