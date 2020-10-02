@@ -1,0 +1,49 @@
+scalar Time
+
+type Customer {
+  id: ID!
+  name: String!
+  Phonenumber: Int!
+  Email: String!
+  #Since A customer might have an order
+  orders: [Order]
+}
+
+type Order {
+  id: ID!
+  # Somewhat A relationship to the customer type
+  customer: Customer!
+  item: [Item!]!
+  price: Float!
+  date_order_placed: Time!
+}
+
+type Query {
+  customers: [Customer!]!
+  orders: [Order!]!
+}
+
+input customerInput {
+  name: String!
+  Phonenumber: Int!
+  Email: String!
+}
+
+type Item {
+  name: String!
+}
+
+input ItemInput {
+  name: String!
+}
+
+input orderInput {
+  item: [ItemInput]!
+  price: Float!
+  date_order_placed: Time!
+}
+
+type Mutation {
+  createCustomer(input: customerInput!): Customer!
+  createOrder(input: orderInput!): Order!
+}
