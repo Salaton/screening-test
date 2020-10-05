@@ -48,29 +48,33 @@ type ComplexityRoot struct {
 		Email       func(childComplexity int) int
 		ID          func(childComplexity int) int
 		Name        func(childComplexity int) int
-		Orders      func(childComplexity int) int
 		Phonenumber func(childComplexity int) int
 	}
 
 	Item struct {
-		Name func(childComplexity int) int
+		ID       func(childComplexity int) int
+		Name     func(childComplexity int) int
+		Quantity func(childComplexity int) int
 	}
 
 	Mutation struct {
 		CreateCustomer func(childComplexity int, input model.CustomerInput) int
+		CreateItem     func(childComplexity int, input model.ItemInput) int
 		CreateOrder    func(childComplexity int, input model.OrderInput) int
 	}
 
 	Order struct {
-		Customer        func(childComplexity int) int
-		DateOrderPlaced func(childComplexity int) int
-		ID              func(childComplexity int) int
-		Item            func(childComplexity int) int
-		Price           func(childComplexity int) int
+		CustomerName        func(childComplexity int) int
+		CustomerPhoneNumber func(childComplexity int) int
+		DateOrderPlaced     func(childComplexity int) int
+		ID                  func(childComplexity int) int
+		Item                func(childComplexity int) int
+		Price               func(childComplexity int) int
 	}
 
 	Query struct {
 		Customers func(childComplexity int) int
+		Items     func(childComplexity int) int
 		Orders    func(childComplexity int) int
 	}
 }
@@ -78,10 +82,12 @@ type ComplexityRoot struct {
 type MutationResolver interface {
 	CreateCustomer(ctx context.Context, input model.CustomerInput) (*model.Customer, error)
 	CreateOrder(ctx context.Context, input model.OrderInput) (*model.Order, error)
+	CreateItem(ctx context.Context, input model.ItemInput) (*model.Item, error)
 }
 type QueryResolver interface {
 	Customers(ctx context.Context) ([]*model.Customer, error)
 	Orders(ctx context.Context) ([]*model.Order, error)
+	Items(ctx context.Context) ([]*model.Item, error)
 }
 
 type executableSchema struct {
@@ -120,13 +126,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Customer.Name(childComplexity), true
 
-	case "Customer.orders":
-		if e.complexity.Customer.Orders == nil {
-			break
-		}
-
-		return e.complexity.Customer.Orders(childComplexity), true
-
 	case "Customer.Phonenumber":
 		if e.complexity.Customer.Phonenumber == nil {
 			break
@@ -134,12 +133,26 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Customer.Phonenumber(childComplexity), true
 
+	case "Item.id":
+		if e.complexity.Item.ID == nil {
+			break
+		}
+
+		return e.complexity.Item.ID(childComplexity), true
+
 	case "Item.name":
 		if e.complexity.Item.Name == nil {
 			break
 		}
 
 		return e.complexity.Item.Name(childComplexity), true
+
+	case "Item.quantity":
+		if e.complexity.Item.Quantity == nil {
+			break
+		}
+
+		return e.complexity.Item.Quantity(childComplexity), true
 
 	case "Mutation.createCustomer":
 		if e.complexity.Mutation.CreateCustomer == nil {
@@ -153,6 +166,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.CreateCustomer(childComplexity, args["input"].(model.CustomerInput)), true
 
+	case "Mutation.createItem":
+		if e.complexity.Mutation.CreateItem == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_createItem_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.CreateItem(childComplexity, args["input"].(model.ItemInput)), true
+
 	case "Mutation.createOrder":
 		if e.complexity.Mutation.CreateOrder == nil {
 			break
@@ -165,12 +190,19 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.CreateOrder(childComplexity, args["input"].(model.OrderInput)), true
 
-	case "Order.customer":
-		if e.complexity.Order.Customer == nil {
+	case "Order.customerName":
+		if e.complexity.Order.CustomerName == nil {
 			break
 		}
 
-		return e.complexity.Order.Customer(childComplexity), true
+		return e.complexity.Order.CustomerName(childComplexity), true
+
+	case "Order.customerPhoneNumber":
+		if e.complexity.Order.CustomerPhoneNumber == nil {
+			break
+		}
+
+		return e.complexity.Order.CustomerPhoneNumber(childComplexity), true
 
 	case "Order.date_order_placed":
 		if e.complexity.Order.DateOrderPlaced == nil {
@@ -206,6 +238,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Query.Customers(childComplexity), true
+
+	case "Query.items":
+		if e.complexity.Query.Items == nil {
+			break
+		}
+
+		return e.complexity.Query.Items(childComplexity), true
 
 	case "Query.orders":
 		if e.complexity.Query.Orders == nil {
@@ -281,26 +320,31 @@ var sources = []*ast.Source{
 	{Name: "graph/schema.graphqls", Input: `scalar Time
 
 type Customer {
-  id: ID!
+  id: Int!
   name: String!
   Phonenumber: Int!
   Email: String!
   #Since A customer might have an order
-  orders: [Order]
+  # orders: [Order]
 }
 
 type Order {
-  id: ID!
+  id: Int!
+  customerName: String!
+  customerPhoneNumber: Int!
   # Somewhat A relationship to the customer type
-  customer: Customer!
+  # customer: Customer!
+  # customer_id: ID!
+  # An order can have many items (one to many relationship)
   item: [Item!]!
   price: Float!
   date_order_placed: Time!
 }
 
-type Query {
-  customers: [Customer!]!
-  orders: [Order!]!
+type Item {
+  id: Int!
+  name: String!
+  quantity: Int!
 }
 
 input customerInput {
@@ -309,23 +353,29 @@ input customerInput {
   Email: String!
 }
 
-type Item {
-  name: String!
-}
-
-input ItemInput {
-  name: String!
-}
-
 input orderInput {
+  customername: String!
+  customerPhoneNumber: Int!
   item: [ItemInput]!
   price: Float!
   date_order_placed: Time!
 }
 
+input ItemInput {
+  name: String!
+  quantity: Int!
+}
+
 type Mutation {
   createCustomer(input: customerInput!): Customer!
   createOrder(input: orderInput!): Order!
+  createItem(input: ItemInput!): Item!
+}
+
+type Query {
+  customers: [Customer!]!
+  orders: [Order!]!
+  items: [Item!]!
 }
 `, BuiltIn: false},
 }
@@ -342,6 +392,21 @@ func (ec *executionContext) field_Mutation_createCustomer_args(ctx context.Conte
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 		arg0, err = ec.unmarshalNcustomerInput2githubᚗcomᚋSalatonᚋscreeningᚑtestᚗgitᚋgraphᚋmodelᚐCustomerInput(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_createItem_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 model.ItemInput
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg0, err = ec.unmarshalNItemInput2githubᚗcomᚋSalatonᚋscreeningᚑtestᚗgitᚋgraphᚋmodelᚐItemInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -448,9 +513,9 @@ func (ec *executionContext) _Customer_id(ctx context.Context, field graphql.Coll
 		}
 		return graphql.Null
 	}
-	res := resTmp.(string)
+	res := resTmp.(int)
 	fc.Result = res
-	return ec.marshalNID2string(ctx, field.Selections, res)
+	return ec.marshalNInt2int(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Customer_name(ctx context.Context, field graphql.CollectedField, obj *model.Customer) (ret graphql.Marshaler) {
@@ -558,7 +623,7 @@ func (ec *executionContext) _Customer_Email(ctx context.Context, field graphql.C
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Customer_orders(ctx context.Context, field graphql.CollectedField, obj *model.Customer) (ret graphql.Marshaler) {
+func (ec *executionContext) _Item_id(ctx context.Context, field graphql.CollectedField, obj *model.Item) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -566,7 +631,7 @@ func (ec *executionContext) _Customer_orders(ctx context.Context, field graphql.
 		}
 	}()
 	fc := &graphql.FieldContext{
-		Object:     "Customer",
+		Object:     "Item",
 		Field:      field,
 		Args:       nil,
 		IsMethod:   false,
@@ -576,18 +641,21 @@ func (ec *executionContext) _Customer_orders(ctx context.Context, field graphql.
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Orders, nil
+		return obj.ID, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
 		return graphql.Null
 	}
 	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
 		return graphql.Null
 	}
-	res := resTmp.([]*model.Order)
+	res := resTmp.(int)
 	fc.Result = res
-	return ec.marshalOOrder2ᚕᚖgithubᚗcomᚋSalatonᚋscreeningᚑtestᚗgitᚋgraphᚋmodelᚐOrder(ctx, field.Selections, res)
+	return ec.marshalNInt2int(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Item_name(ctx context.Context, field graphql.CollectedField, obj *model.Item) (ret graphql.Marshaler) {
@@ -623,6 +691,41 @@ func (ec *executionContext) _Item_name(ctx context.Context, field graphql.Collec
 	res := resTmp.(string)
 	fc.Result = res
 	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Item_quantity(ctx context.Context, field graphql.CollectedField, obj *model.Item) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Item",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Quantity, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Mutation_createCustomer(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -709,6 +812,48 @@ func (ec *executionContext) _Mutation_createOrder(ctx context.Context, field gra
 	return ec.marshalNOrder2ᚖgithubᚗcomᚋSalatonᚋscreeningᚑtestᚗgitᚋgraphᚋmodelᚐOrder(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _Mutation_createItem(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Mutation_createItem_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().CreateItem(rctx, args["input"].(model.ItemInput))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.Item)
+	fc.Result = res
+	return ec.marshalNItem2ᚖgithubᚗcomᚋSalatonᚋscreeningᚑtestᚗgitᚋgraphᚋmodelᚐItem(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _Order_id(ctx context.Context, field graphql.CollectedField, obj *model.Order) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -739,12 +884,12 @@ func (ec *executionContext) _Order_id(ctx context.Context, field graphql.Collect
 		}
 		return graphql.Null
 	}
-	res := resTmp.(string)
+	res := resTmp.(int)
 	fc.Result = res
-	return ec.marshalNID2string(ctx, field.Selections, res)
+	return ec.marshalNInt2int(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Order_customer(ctx context.Context, field graphql.CollectedField, obj *model.Order) (ret graphql.Marshaler) {
+func (ec *executionContext) _Order_customerName(ctx context.Context, field graphql.CollectedField, obj *model.Order) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -762,7 +907,7 @@ func (ec *executionContext) _Order_customer(ctx context.Context, field graphql.C
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Customer, nil
+		return obj.CustomerName, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -774,9 +919,44 @@ func (ec *executionContext) _Order_customer(ctx context.Context, field graphql.C
 		}
 		return graphql.Null
 	}
-	res := resTmp.(*model.Customer)
+	res := resTmp.(string)
 	fc.Result = res
-	return ec.marshalNCustomer2ᚖgithubᚗcomᚋSalatonᚋscreeningᚑtestᚗgitᚋgraphᚋmodelᚐCustomer(ctx, field.Selections, res)
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Order_customerPhoneNumber(ctx context.Context, field graphql.CollectedField, obj *model.Order) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Order",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.CustomerPhoneNumber, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Order_item(ctx context.Context, field graphql.CollectedField, obj *model.Order) (ret graphql.Marshaler) {
@@ -952,6 +1132,41 @@ func (ec *executionContext) _Query_orders(ctx context.Context, field graphql.Col
 	res := resTmp.([]*model.Order)
 	fc.Result = res
 	return ec.marshalNOrder2ᚕᚖgithubᚗcomᚋSalatonᚋscreeningᚑtestᚗgitᚋgraphᚋmodelᚐOrderᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Query_items(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().Items(rctx)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.Item)
+	fc.Result = res
+	return ec.marshalNItem2ᚕᚖgithubᚗcomᚋSalatonᚋscreeningᚑtestᚗgitᚋgraphᚋmodelᚐItemᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query___type(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -2126,6 +2341,14 @@ func (ec *executionContext) unmarshalInputItemInput(ctx context.Context, obj int
 			if err != nil {
 				return it, err
 			}
+		case "quantity":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("quantity"))
+			it.Quantity, err = ec.unmarshalNInt2int(ctx, v)
+			if err != nil {
+				return it, err
+			}
 		}
 	}
 
@@ -2174,6 +2397,22 @@ func (ec *executionContext) unmarshalInputorderInput(ctx context.Context, obj in
 
 	for k, v := range asMap {
 		switch k {
+		case "customername":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("customername"))
+			it.Customername, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "customerPhoneNumber":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("customerPhoneNumber"))
+			it.CustomerPhoneNumber, err = ec.unmarshalNInt2int(ctx, v)
+			if err != nil {
+				return it, err
+			}
 		case "item":
 			var err error
 
@@ -2243,8 +2482,6 @@ func (ec *executionContext) _Customer(ctx context.Context, sel ast.SelectionSet,
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
-		case "orders":
-			out.Values[i] = ec._Customer_orders(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -2267,8 +2504,18 @@ func (ec *executionContext) _Item(ctx context.Context, sel ast.SelectionSet, obj
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("Item")
+		case "id":
+			out.Values[i] = ec._Item_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		case "name":
 			out.Values[i] = ec._Item_name(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "quantity":
+			out.Values[i] = ec._Item_quantity(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
@@ -2308,6 +2555,11 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
+		case "createItem":
+			out.Values[i] = ec._Mutation_createItem(ctx, field)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -2335,8 +2587,13 @@ func (ec *executionContext) _Order(ctx context.Context, sel ast.SelectionSet, ob
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
-		case "customer":
-			out.Values[i] = ec._Order_customer(ctx, field, obj)
+		case "customerName":
+			out.Values[i] = ec._Order_customerName(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "customerPhoneNumber":
+			out.Values[i] = ec._Order_customerPhoneNumber(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
@@ -2404,6 +2661,20 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_orders(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			})
+		case "items":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_items(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&invalids, 1)
 				}
@@ -2750,21 +3021,6 @@ func (ec *executionContext) marshalNFloat2float64(ctx context.Context, sel ast.S
 	return res
 }
 
-func (ec *executionContext) unmarshalNID2string(ctx context.Context, v interface{}) (string, error) {
-	res, err := graphql.UnmarshalID(v)
-	return res, graphql.ErrorOnPath(ctx, err)
-}
-
-func (ec *executionContext) marshalNID2string(ctx context.Context, sel ast.SelectionSet, v string) graphql.Marshaler {
-	res := graphql.MarshalID(v)
-	if res == graphql.Null {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "must not be null")
-		}
-	}
-	return res
-}
-
 func (ec *executionContext) unmarshalNInt2int(ctx context.Context, v interface{}) (int, error) {
 	res, err := graphql.UnmarshalInt(v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -2778,6 +3034,10 @@ func (ec *executionContext) marshalNInt2int(ctx context.Context, sel ast.Selecti
 		}
 	}
 	return res
+}
+
+func (ec *executionContext) marshalNItem2githubᚗcomᚋSalatonᚋscreeningᚑtestᚗgitᚋgraphᚋmodelᚐItem(ctx context.Context, sel ast.SelectionSet, v model.Item) graphql.Marshaler {
+	return ec._Item(ctx, sel, &v)
 }
 
 func (ec *executionContext) marshalNItem2ᚕᚖgithubᚗcomᚋSalatonᚋscreeningᚑtestᚗgitᚋgraphᚋmodelᚐItemᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Item) graphql.Marshaler {
@@ -2825,6 +3085,11 @@ func (ec *executionContext) marshalNItem2ᚖgithubᚗcomᚋSalatonᚋscreening�
 		return graphql.Null
 	}
 	return ec._Item(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalNItemInput2githubᚗcomᚋSalatonᚋscreeningᚑtestᚗgitᚋgraphᚋmodelᚐItemInput(ctx context.Context, v interface{}) (model.ItemInput, error) {
+	res, err := ec.unmarshalInputItemInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) unmarshalNItemInput2ᚕᚖgithubᚗcomᚋSalatonᚋscreeningᚑtestᚗgitᚋgraphᚋmodelᚐItemInput(ctx context.Context, v interface{}) ([]*model.ItemInput, error) {
@@ -3198,53 +3463,6 @@ func (ec *executionContext) unmarshalOItemInput2ᚖgithubᚗcomᚋSalatonᚋscre
 	}
 	res, err := ec.unmarshalInputItemInput(ctx, v)
 	return &res, graphql.ErrorOnPath(ctx, err)
-}
-
-func (ec *executionContext) marshalOOrder2ᚕᚖgithubᚗcomᚋSalatonᚋscreeningᚑtestᚗgitᚋgraphᚋmodelᚐOrder(ctx context.Context, sel ast.SelectionSet, v []*model.Order) graphql.Marshaler {
-	if v == nil {
-		return graphql.Null
-	}
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalOOrder2ᚖgithubᚗcomᚋSalatonᚋscreeningᚑtestᚗgitᚋgraphᚋmodelᚐOrder(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
-	return ret
-}
-
-func (ec *executionContext) marshalOOrder2ᚖgithubᚗcomᚋSalatonᚋscreeningᚑtestᚗgitᚋgraphᚋmodelᚐOrder(ctx context.Context, sel ast.SelectionSet, v *model.Order) graphql.Marshaler {
-	if v == nil {
-		return graphql.Null
-	}
-	return ec._Order(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalOString2string(ctx context.Context, v interface{}) (string, error) {
