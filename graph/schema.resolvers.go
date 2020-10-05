@@ -11,20 +11,12 @@ import (
 	db "github.com/Salaton/screening-test.git/postgres"
 )
 
+var DB db.DBClient
+
 func (r *mutationResolver) CreateCustomer(ctx context.Context, input model.CustomerInput) (*model.Customer, error) {
 	DB.CreateCustomer(input)
 	return &model.Customer{}, nil
 	// panic(fmt.Errorf("not implemented"))
-}
-
-func (r *mutationResolver) CreateOrder(ctx context.Context, input model.OrderInput) (*model.Order, error) {
-	DB.CreateOrder(input)
-	return &model.Order{}, nil
-}
-
-func (r *mutationResolver) CreateItem(ctx context.Context, input model.ItemInput) (*model.Item, error) {
-	DB.CreateItem(input)
-	return &model.Item{}, nil
 }
 
 func (r *queryResolver) Customers(ctx context.Context) ([]*model.Customer, error) {
@@ -36,7 +28,10 @@ func (r *queryResolver) Customers(ctx context.Context) ([]*model.Customer, error
 
 func (r *queryResolver) Orders(ctx context.Context) ([]*model.Order, error) {
 	var orders []*model.Order
-	r.db.Preload("Item").Find(&orders)
+	err := r.db.Preload("customers").Find(&orders).Error
+	if err != nil {
+		return nil, err
+	}
 	return orders, nil
 	// panic(fmt.Errorf("not implemented"))
 }
@@ -64,4 +59,3 @@ type queryResolver struct{ *Resolver }
 //  - When renaming or deleting a resolver the old code will be put in here. You can safely delete
 //    it when you're done.
 //  - You have helper methods in this file. Move them out to keep these resolver files clean.
-var DB db.DBClient
