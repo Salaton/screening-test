@@ -6,13 +6,11 @@ type Customer {
   Phonenumber: Int!
   Email: String!
   #Since A customer might have an order
-  # orders: [Order]
+  orders: [Order!]!
 }
 
 type Order {
   id: Int!
-  customerName: String!
-  customerPhoneNumber: Int!
   # Somewhat A relationship to the customer type
   # customer: Customer!
   # customer_id: ID!
@@ -32,11 +30,10 @@ input customerInput {
   name: String!
   Phonenumber: Int!
   Email: String!
+  orders: [orderInput!]!
 }
 
 input orderInput {
-  customername: String!
-  customerPhoneNumber: Int!
   item: [ItemInput]!
   price: Float!
   date_order_placed: Time!
@@ -49,8 +46,8 @@ input ItemInput {
 
 type Mutation {
   createCustomer(input: customerInput!): Customer!
-  createOrder(input: orderInput!): Order!
-  createItem(input: ItemInput!): Item!
+  # createOrder(input: orderInput!): Order!
+  # createItem(input: ItemInput!): Item!
 }
 
 type Query {

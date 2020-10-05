@@ -7,17 +7,18 @@ import (
 )
 
 type Customer struct {
-	ID          int    `json:"id"`
-	Name        string `json:"name"`
-	Phonenumber int    `json:"Phonenumber"`
-	Email       string `json:"Email"`
+	ID          int      `json:"id"`
+	Name        string   `json:"name"`
+	Phonenumber int      `json:"Phonenumber"`
+	Email       string   `json:"Email"`
+	Orders      []*Order `json:"orders"`
 }
 
 type Item struct {
 	ID       int    `json:"id"`
 	Name     string `json:"name"`
 	Quantity int    `json:"quantity"`
-	OrderID  uint   `json:"-"`
+	OrderID  int    `json:"-"`
 }
 
 type ItemInput struct {
@@ -26,24 +27,22 @@ type ItemInput struct {
 }
 
 type Order struct {
-	ID                  int       `json:"id"`
-	CustomerName        string    `json:"customerName"`
-	CustomerPhoneNumber int       `json:"customerPhoneNumber"`
-	Item                []*Item   `json:"item"`
-	Price               float64   `json:"price"`
-	DateOrderPlaced     time.Time `json:"date_order_placed"`
+	ID              int       `json:"id"`
+	Item            []*Item   `json:"item"`
+	Price           float64   `json:"price"`
+	DateOrderPlaced time.Time `json:"date_order_placed"`
+	CustomerID      int       `json:"-"`
 }
 
 type CustomerInput struct {
-	Name        string `json:"name"`
-	Phonenumber int    `json:"Phonenumber"`
-	Email       string `json:"Email"`
+	Name        string        `json:"name"`
+	Phonenumber int           `json:"Phonenumber"`
+	Email       string        `json:"Email"`
+	Orders      []*OrderInput `json:"orders"`
 }
 
 type OrderInput struct {
-	Customername        string       `json:"customername"`
-	CustomerPhoneNumber int          `json:"customerPhoneNumber"`
-	Item                []*ItemInput `json:"item"`
-	Price               float64      `json:"price"`
-	DateOrderPlaced     time.Time    `json:"date_order_placed"`
+	Item            []*ItemInput `json:"item"`
+	Price           float64      `json:"price"`
+	DateOrderPlaced time.Time    `json:"date_order_placed"`
 }
