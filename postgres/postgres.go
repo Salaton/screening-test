@@ -12,8 +12,9 @@ import (
 // DBClient interface to hold Methods that interact with our DB
 type DBClient interface {
 	Open(dbConnString string) error
-	CreateOrder(order model.OrderInput)
+	CreateOrder(model.OrderInput)
 	CreateCustomer(model.CustomerInput)
+	CreateItem(model.ItemInput)
 }
 
 // PostgresClient for db references
@@ -28,19 +29,44 @@ func (ps *PostgresClient) Open(dbConnString string) error {
 	if err != nil {
 		return err
 	}
-	ps.db.AutoMigrate(&Customer{})
-	ps.db.AutoMigrate(&Order{})
+	// Create Customer, Item and Order tables..
+	ps.db.AutoMigrate(&model.Customer{}, &model.Order{}, &model.Item{})
 
 	return nil
 }
 
+func (ps *PostgresClient) CreateItem(item model.ItemInput) {
+	if err := ps.db.Create(&model.Item{
+		Name:     item.Name,
+		Quantity: item.Quantity,
+	}).Error; err != nil {
+		log.Printf("Something went wrong %v", err.Error())
+	}
+}
+
+func loopOverItems(itemsInput []*model.ItemInput) []*model.Item {
+	var items []*model.Item
+	for _, itemInput := range itemsInput {
+		items = append(items, &model.Item{
+			Name:     itemInput.Name,
+			Quantity: itemInput.Quantity,
+		})
+	}
+	return items
+}
+
 func (ps *PostgresClient) CreateOrder(order model.OrderInput) {
 	log.Printf("Running")
-	if err := ps.db.Create(&Order{
+	if err := ps.db.Create(&model.Order{
+
 		// ID:              "texrtxf",
-		Item:            order.Item,
+		CustomerName:        order.Customername,
+		CustomerPhoneNumber: order.CustomerPhoneNumber,
+		//Should return a model.Item type..
+		Item:            loopOverItems(order.Item),
 		Price:           order.Price,
-		DateOrderPlaced: time.Now().String(),
+		DateOrderPlaced: time.Now(),
+
 		// CustomerID:      Customer,
 	}).Error; err != nil {
 		log.Printf("Something went wrong %v", err.Error())
@@ -49,7 +75,7 @@ func (ps *PostgresClient) CreateOrder(order model.OrderInput) {
 }
 
 func (ps *PostgresClient) CreateCustomer(customer model.CustomerInput) {
-	if err := ps.db.Create(&Customer{
+	if err := ps.db.Create(&model.Customer{
 		// ID:          "xtfg", -->Automatically generated
 		Name:        customer.Name,
 		Phonenumber: customer.Phonenumber,
@@ -59,13 +85,13 @@ func (ps *PostgresClient) CreateCustomer(customer model.CustomerInput) {
 	}
 }
 
-func (ps *PostgresClient) FetchAllOrdersForCustomer(custID string) {
-	var customer Customer
-	if err := ps.db.Where("id = ?", custID).Preload("Orders").First(&customer).Error; err != nil {
-		log.Printf("Something bad happened %v", err.Error())
-	}
+// func (ps *PostgresClient) FetchAllOrdersForCustomer(custID string) {
+// 	var customer Customer
+// 	if err := ps.db.Where("id = ?", custID).Preload("Orders").First(&customer).Error; err != nil {
+// 		log.Printf("Something bad happened %v", err.Error())
+// 	}
 
-	for _, order := range customer.Orders {
-		log.Printf("ORDER %v", order)
-	}
-}
+// 	for _, order := range customer.Orders {
+// 		log.Printf("ORDER %v", order)
+// 	}
+// }
