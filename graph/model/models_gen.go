@@ -9,7 +9,7 @@ import (
 type Customer struct {
 	ID          int      `json:"id"`
 	Name        string   `json:"name"`
-	Phonenumber int      `json:"Phonenumber"`
+	Phonenumber string   `json:"Phonenumber"`
 	Email       string   `json:"Email"`
 	Orders      []*Order `json:"orders"`
 }
@@ -21,11 +21,6 @@ type Item struct {
 	OrderID  int    `json:"-"`
 }
 
-type ItemInput struct {
-	Name     string `json:"name"`
-	Quantity int    `json:"quantity"`
-}
-
 type Order struct {
 	ID              int       `json:"id"`
 	Item            []*Item   `json:"item"`
@@ -34,9 +29,14 @@ type Order struct {
 	CustomerID      int       `json:"-"`
 }
 
+type ItemInput struct {
+	Name     string `json:"name"`
+	Quantity int    `json:"quantity"`
+}
+
 type CustomerInput struct {
 	Name        string        `json:"name"`
-	Phonenumber int           `json:"Phonenumber"`
+	Phonenumber string        `json:"Phonenumber"`
 	Email       string        `json:"Email"`
 	Orders      []*OrderInput `json:"orders"`
 }

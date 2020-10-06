@@ -3,7 +3,7 @@ scalar Time
 type Customer {
   id: Int!
   name: String!
-  Phonenumber: Int!
+  Phonenumber: String!
   Email: String!
   #Since A customer might have an order
   orders: [Order!]!
@@ -28,7 +28,7 @@ type Item {
 
 input customerInput {
   name: String!
-  Phonenumber: Int!
+  Phonenumber: String!
   Email: String!
   orders: [orderInput!]!
 }

@@ -286,7 +286,7 @@ var sources = []*ast.Source{
 type Customer {
   id: Int!
   name: String!
-  Phonenumber: Int!
+  Phonenumber: String!
   Email: String!
   #Since A customer might have an order
   orders: [Order!]!
@@ -311,7 +311,7 @@ type Item {
 
 input customerInput {
   name: String!
-  Phonenumber: Int!
+  Phonenumber: String!
   Email: String!
   orders: [orderInput!]!
 }
@@ -514,9 +514,9 @@ func (ec *executionContext) _Customer_Phonenumber(ctx context.Context, field gra
 		}
 		return graphql.Null
 	}
-	res := resTmp.(int)
+	res := resTmp.(string)
 	fc.Result = res
-	return ec.marshalNInt2int(ctx, field.Selections, res)
+	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Customer_Email(ctx context.Context, field graphql.CollectedField, obj *model.Customer) (ret graphql.Marshaler) {
@@ -2185,7 +2185,7 @@ func (ec *executionContext) unmarshalInputcustomerInput(ctx context.Context, obj
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("Phonenumber"))
-			it.Phonenumber, err = ec.unmarshalNInt2int(ctx, v)
+			it.Phonenumber, err = ec.unmarshalNString2string(ctx, v)
 			if err != nil {
 				return it, err
 			}
