@@ -4,6 +4,8 @@ import (
 	"log"
 
 	model "github.com/Salaton/screening-test.git/graph/model"
+	notification "github.com/Salaton/screening-test.git/notification"
+
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
@@ -13,8 +15,8 @@ type DBClient interface {
 	Open(dbConnString string) error
 	// CreateOrder(model.OrderInput)
 	CreateCustomer(model.CustomerInput)
-	FetchPhoneNumber()
-	FetchAllOrdersForCustomer()
+	// FetchPhoneNumber()
+	// FetchAllOrdersForCustomer()
 	// CreateItem(model.ItemInput)
 }
 
@@ -78,11 +80,15 @@ func (ps *PostgresClient) CreateCustomer(customer model.CustomerInput) {
 	}).Error; err != nil {
 		log.Printf("Something went wrong %v", err.Error())
 	}
+	// After the customer created the order, send a notification to them
+	notification.SendNotification(customer.Name, customer.Phonenumber)
 }
 
 func (ps *PostgresClient) FetchPhoneNumber(customerID int) {
 	var customer Customer
 	ps.db.Raw("SELECT phonenumber FROM customers WHERE id=?", customerID).Scan(&customer)
+
+	// ps.db.First(&customer.Phonenumber, 1)
 
 	// if err := ps.db.Select("phonenumber").Find(&customer).Error; err != nil {
 	// 	log.Printf("Something happened %v", err.Error())
