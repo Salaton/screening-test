@@ -13,6 +13,8 @@ type DBClient interface {
 	Open(dbConnString string) error
 	// CreateOrder(model.OrderInput)
 	CreateCustomer(model.CustomerInput)
+	FetchPhoneNumber()
+	FetchAllOrdersForCustomer()
 	// CreateItem(model.ItemInput)
 }
 
@@ -66,25 +68,6 @@ func loopOverOrders(ordersInput []*model.OrderInput) []*model.Order {
 	return orders
 }
 
-// func (ps *PostgresClient) CreateOrder(order model.OrderInput) {
-// 	log.Printf("Running")
-// 	if err := ps.db.Create(&model.Order{
-
-// 		// ID:              "texrtxf",
-// 		CustomerName:        order.Customername,
-// 		CustomerPhoneNumber: order.CustomerPhoneNumber,
-// 		//Should return a model.Item type..
-// 		Item:            loopOverItems(order.Item),
-// 		Price:           order.Price,
-// 		DateOrderPlaced: time.Now(),
-
-// 		// CustomerID:      Customer,
-// 	}).Error; err != nil {
-// 		log.Printf("Something went wrong %v", err.Error())
-// 	}
-
-// }
-
 func (ps *PostgresClient) CreateCustomer(customer model.CustomerInput) {
 	if err := ps.db.Create(&model.Customer{
 		// ID:          "xtfg", -->Automatically generated
@@ -97,13 +80,23 @@ func (ps *PostgresClient) CreateCustomer(customer model.CustomerInput) {
 	}
 }
 
-// func (ps *PostgresClient) FetchAllOrdersForCustomer(custID string) {
-// 	var customer Customer
-// 	if err := ps.db.Where("id = ?", custID).Preload("Orders").First(&customer).Error; err != nil {
-// 		log.Printf("Something bad happened %v", err.Error())
-// 	}
+func (ps *PostgresClient) FetchPhoneNumber(customerID int) {
+	var customer Customer
+	ps.db.Raw("SELECT phonenumber FROM customers WHERE id=?", customerID).Scan(&customer)
 
-// 	for _, order := range customer.Orders {
-// 		log.Printf("ORDER %v", order)
-// 	}
-// }
+	// if err := ps.db.Select("phonenumber").Find(&customer).Error; err != nil {
+	// 	log.Printf("Something happened %v", err.Error())
+	// }
+
+}
+
+func (ps *PostgresClient) FetchAllOrdersForCustomer(custID string) {
+	var customer Customer
+	if err := ps.db.Where("id = ?", custID).Preload("Orders").First(&customer).Error; err != nil {
+		log.Printf("Something bad happened %v", err.Error())
+	}
+
+	for _, order := range customer.Orders {
+		log.Printf("ORDER %v", order)
+	}
+}
