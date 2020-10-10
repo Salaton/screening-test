@@ -5,24 +5,68 @@ package graph
 
 import (
 	"context"
+	"fmt"
 
+	auth "github.com/Salaton/screening-test.git/auth"
 	"github.com/Salaton/screening-test.git/graph/generated"
-	"github.com/Salaton/screening-test.git/graph/model"
+	model "github.com/Salaton/screening-test.git/graph/model"
 	db "github.com/Salaton/screening-test.git/postgres"
+	users "github.com/Salaton/screening-test.git/users"
 )
 
 var DB db.DBClient
 
+// var usermethod users.UserMethodsInterface
+
+func (r *mutationResolver) CreateUser(ctx context.Context, input model.CreatedUser) (string, error) {
+	// var user model.User
+	DB.CreateUser(input)
+
+	token, err := auth.CreateNewToken(input.Username)
+	if err != nil {
+		return "", err
+	}
+	return token, nil
+}
+
+func (r *mutationResolver) Login(ctx context.Context, input model.LoginDetails) (string, error) {
+	var user model.User
+	user.Username = input.Username
+	user.Password = input.Password
+	correct := DB.Authenticate()
+
+	if !correct {
+		// 1
+		return "", &users.WrongUsernameOrPasswordError{}
+	}
+	token, err := auth.CreateNewToken(input.Username)
+	if err != nil {
+		return "", err
+	}
+	return token, nil
+
+}
+
 func (r *mutationResolver) CreateCustomer(ctx context.Context, input model.CustomerInput) (*model.Customer, error) {
 	DB.CreateCustomer(input)
 	return &model.Customer{}, nil
-	// panic(fmt.Errorf("not implemented"))
+}
+
+func (r *mutationResolver) CreateOrder(ctx context.Context, input model.OrderInput) (*model.Order, error) {
+	user := auth.ForContext(ctx)
+	if user == nil {
+		return &model.Order{}, fmt.Errorf("access denied, you need to log in")
+	}
+	DB.CreateOrder(input)
+	return &model.Order{}, nil
 }
 
 func (r *queryResolver) Customers(ctx context.Context) ([]*model.Customer, error) {
 	var customers []*model.Customer
-	r.db.Find(&customers)
+	// r.db.Find(&customers)
+	// DB.FindCustomers(&customers)
 	return customers, nil
+
 	// panic(fmt.Errorf("not implemented"))
 }
 
@@ -33,14 +77,6 @@ func (r *queryResolver) Orders(ctx context.Context) ([]*model.Order, error) {
 		return nil, err
 	}
 	return orders, nil
-	// panic(fmt.Errorf("not implemented"))
-}
-
-func (r *queryResolver) Items(ctx context.Context) ([]*model.Item, error) {
-	var items []*model.Item
-	// similar to SELECT * FROM items
-	r.db.Find(&items)
-	return items, nil
 	// panic(fmt.Errorf("not implemented"))
 }
 
@@ -59,3 +95,15 @@ type queryResolver struct{ *Resolver }
 //  - When renaming or deleting a resolver the old code will be put in here. You can safely delete
 //    it when you're done.
 //  - You have helper methods in this file. Move them out to keep these resolver files clean.
+
+// func (r *mutationResolver) CreateToken(ctx context.Context, input model.NewUser) (string, error) {
+// 	var user model.NewUser
+// 	user.Username = input.Username
+// 	token, err := auth.CreateNewToken(user.Username)
+// 	if err != nil {
+// 		return "", nil
+// 	}
+
+// 	return token, nil
+// 	// panic(fmt.Errorf("not implemented"))
+// }
