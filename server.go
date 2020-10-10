@@ -7,6 +7,7 @@ import (
 
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/playground"
+	auth "github.com/Salaton/screening-test.git/auth"
 	"github.com/Salaton/screening-test.git/graph"
 	"github.com/Salaton/screening-test.git/graph/generated"
 	db "github.com/Salaton/screening-test.git/postgres"
@@ -20,6 +21,8 @@ func main() {
 		port = defaultPort
 	}
 
+	// Using our middleware
+	auth.Middleware()
 	srv := handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &graph.Resolver{}}))
 
 	http.Handle("/", playground.Handler("GraphQL playground", "/query"))
