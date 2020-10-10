@@ -7,11 +7,10 @@ import (
 )
 
 type Customer struct {
-	ID          int      `json:"id"`
-	Name        string   `json:"name"`
-	Phonenumber string   `json:"Phonenumber"`
-	Email       string   `json:"Email"`
-	Orders      []*Order `json:"orders"`
+	ID          int    `json:"id"`
+	Name        string `json:"name"`
+	Phonenumber string `json:"Phonenumber"`
+	Email       string `json:"Email"`
 }
 
 type Item struct {
@@ -21,27 +20,44 @@ type Item struct {
 	OrderID  int    `json:"-"`
 }
 
-type Order struct {
-	ID              int       `json:"id"`
-	Item            []*Item   `json:"item"`
-	Price           float64   `json:"price"`
-	DateOrderPlaced time.Time `json:"date_order_placed"`
-	CustomerID      int       `json:"-"`
-}
-
 type ItemInput struct {
 	Name     string `json:"name"`
 	Quantity int    `json:"quantity"`
 }
 
+type Order struct {
+	ID              int       `json:"id"`
+	Customer        *Customer `json:"customer"`
+	CustomerID      int       `json:"customer_id"`
+	Item            []*Item   `json:"item"`
+	Price           float64   `json:"price"`
+	DateOrderPlaced time.Time `json:"date_order_placed"`
+}
+
+type User struct {
+	ID       int    `json:"id"`
+	Username string `json:"username"`
+	Password string `json:"password"`
+}
+
+type CreatedUser struct {
+	Username string `json:"username"`
+	Password string `json:"password"`
+}
+
 type CustomerInput struct {
-	Name        string        `json:"name"`
-	Phonenumber string        `json:"Phonenumber"`
-	Email       string        `json:"Email"`
-	Orders      []*OrderInput `json:"orders"`
+	Name        string `json:"name"`
+	Phonenumber string `json:"Phonenumber"`
+	Email       string `json:"Email"`
+}
+
+type LoginDetails struct {
+	Username string `json:"username"`
+	Password string `json:"password"`
 }
 
 type OrderInput struct {
+	CustomerID      int          `json:"customer_id"`
 	Item            []*ItemInput `json:"item"`
 	Price           float64      `json:"price"`
 	DateOrderPlaced time.Time    `json:"date_order_placed"`

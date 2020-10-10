@@ -5,15 +5,18 @@ type Customer {
   name: String!
   Phonenumber: String!
   Email: String!
-  #Since A customer might have an order
-  orders: [Order!]!
 }
 
+type User {
+  id: Int!
+  username: String!
+  password: String!
+}
 type Order {
   id: Int!
   # Somewhat A relationship to the customer type
-  # customer: Customer!
-  # customer_id: ID!
+  customer: Customer!
+  customer_id: Int!
   # An order can have many items (one to many relationship)
   item: [Item!]!
   price: Float!
@@ -26,14 +29,24 @@ type Item {
   quantity: Int!
 }
 
+input createdUser {
+  username: String!
+  password: String!
+}
+
+input loginDetails {
+  username: String!
+  password: String!
+}
+
 input customerInput {
   name: String!
   Phonenumber: String!
   Email: String!
-  orders: [orderInput!]!
 }
 
 input orderInput {
+  customer_id: Int!
   item: [ItemInput]!
   price: Float!
   date_order_placed: Time!
@@ -45,13 +58,15 @@ input ItemInput {
 }
 
 type Mutation {
+  # This will return the token needed for authentication
+  createUser(input: createdUser!): String!
+  # Returns login success / not
+  login(input: loginDetails!): String!
   createCustomer(input: customerInput!): Customer!
-  # createOrder(input: orderInput!): Order!
-  # createItem(input: ItemInput!): Item!
+  createOrder(input: orderInput!): Order!
 }
 
 type Query {
   customers: [Customer!]!
   orders: [Order!]!
-  items: [Item!]!
 }
