@@ -2,6 +2,7 @@ package postgres
 
 import (
 	"log"
+	"time"
 
 	model "github.com/Salaton/screening-test.git/graph/model"
 	notification "github.com/Salaton/screening-test.git/notification"
@@ -13,11 +14,10 @@ import (
 // DBClient interface to hold Methods that interact with our DB
 type DBClient interface {
 	Open(dbConnString string) error
-	// CreateOrder(model.OrderInput)
+	CreateOrder(model.OrderInput)
 	CreateCustomer(model.CustomerInput)
-	// FetchPhoneNumber()
-	// FetchAllOrdersForCustomer()
-	// CreateItem(model.ItemInput)
+	CreateUser(model.CreatedUser)
+	Authenticate() bool
 }
 
 // PostgresClient for db references
@@ -33,7 +33,7 @@ func (ps *PostgresClient) Open(dbConnString string) error {
 		return err
 	}
 	// Create Customer, Item and Order tables..
-	ps.db.AutoMigrate(&model.Customer{}, &model.Order{}, &model.Item{})
+	ps.db.AutoMigrate(&model.Customer{}, &model.Order{}, &model.Item{}, &model.User{})
 
 	return nil
 }
@@ -47,62 +47,77 @@ func (ps *PostgresClient) CreateItem(item model.ItemInput) {
 	}
 }
 
-func loopOverItems(itemsInput []*model.ItemInput) []*model.Item {
-	var items []*model.Item
-	for _, itemInput := range itemsInput {
-		items = append(items, &model.Item{
-			Name:     itemInput.Name,
-			Quantity: itemInput.Quantity,
-		})
+func (ps *PostgresClient) CreateUser(user model.CreatedUser) {
+	if err := ps.db.Create(&model.User{
+		Username: user.Username,
+		Password: HashPassword(user.Password),
+	}).Error; err != nil {
+		log.Printf("Something went wrong %v", err)
 	}
-	return items
 }
 
-func loopOverOrders(ordersInput []*model.OrderInput) []*model.Order {
-	var orders []*model.Order
-	for _, orderInput := range ordersInput {
-		orders = append(orders, &model.Order{
-			Item:            loopOverItems(orderInput.Item),
-			Price:           orderInput.Price,
-			DateOrderPlaced: orderInput.DateOrderPlaced,
-		})
+// GetUserID -> Check if a user exists in a DB using the username
+func (ps *PostgresClient) GetUserID(username string) (int, error) {
+	var user model.User
+	row := ps.db.Table("users").Where("username = ?", username).Select("id").Row()
+	var id int
+	row.Scan(&user.ID)
+
+	return id, nil
+}
+
+func (ps *PostgresClient) CreateOrder(order model.OrderInput) {
+	var customer model.Customer
+	if err := ps.db.Create(&model.Order{
+		CustomerID:      order.CustomerID,
+		Item:            loopOverItems(order.Item),
+		Price:           order.Price,
+		DateOrderPlaced: time.Now(),
+	}).Error; err != nil {
+		log.Printf("Something went wrong %v", err.Error())
 	}
-	return orders
+	// Use GORM API build SQL
+	row := ps.db.Table("customers").Where("id = ?", order.CustomerID).Select("phonenumber", "name").Row()
+	row.Scan(&customer.Phonenumber, &customer.Name)
+	notification.SendNotification(customer.Name, customer.Phonenumber)
+
 }
 
 func (ps *PostgresClient) CreateCustomer(customer model.CustomerInput) {
 	if err := ps.db.Create(&model.Customer{
-		// ID:          "xtfg", -->Automatically generated
 		Name:        customer.Name,
 		Phonenumber: customer.Phonenumber,
 		Email:       customer.Email,
-		Orders:      loopOverOrders(customer.Orders),
 	}).Error; err != nil {
 		log.Printf("Something went wrong %v", err.Error())
 	}
-	// After the customer created the order, send a notification to them
-	notification.SendNotification(customer.Name, customer.Phonenumber)
 }
 
-func (ps *PostgresClient) FetchPhoneNumber(customerID int) {
-	var customer Customer
-	ps.db.Raw("SELECT phonenumber FROM customers WHERE id=?", customerID).Scan(&customer)
-
-	// ps.db.First(&customer.Phonenumber, 1)
-
-	// if err := ps.db.Select("phonenumber").Find(&customer).Error; err != nil {
-	// 	log.Printf("Something happened %v", err.Error())
-	// }
-
-}
-
-func (ps *PostgresClient) FetchAllOrdersForCustomer(custID string) {
-	var customer Customer
-	if err := ps.db.Where("id = ?", custID).Preload("Orders").First(&customer).Error; err != nil {
+func (ps *PostgresClient) FindCustomers() model.Customer {
+	var customer model.Customer
+	if err := ps.db.Find(&customer).Error; err != nil {
 		log.Printf("Something bad happened %v", err.Error())
 	}
-
-	for _, order := range customer.Orders {
-		log.Printf("ORDER %v", order)
-	}
+	return customer
 }
+
+// Method to authenticate users
+func (ps *PostgresClient) Authenticate() bool {
+	var user model.User
+	row := ps.db.Table("users").Where("username = ?", user.Username).Select("password").Row()
+	var hashedPassword string
+	row.Scan(&hashedPassword)
+
+	return CheckPasswordHash(user.Password, hashedPassword)
+}
+
+// func (ps *PostgresClient) FetchAllOrdersForCustomer(custID string) {
+// 	var customer Customer
+// 	if err := ps.db.Where("id = ?", custID).Preload("Orders").First(&customer).Error; err != nil {
+// 		log.Printf("Something bad happened %v", err.Error())
+// 	}
+
+// 	for _, order := range customer.Orders {
+// 		log.Printf("ORDER %v", order)
+// 	}
+// }
