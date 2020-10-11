@@ -33,7 +33,7 @@ func (r *mutationResolver) Login(ctx context.Context, input model.LoginDetails) 
 	var user model.User
 	user.Username = input.Username
 	user.Password = input.Password
-	correct := DB.Authenticate()
+	correct := DB.Authenticate(input)
 
 	if !correct {
 		// 1
@@ -95,15 +95,3 @@ type queryResolver struct{ *Resolver }
 //  - When renaming or deleting a resolver the old code will be put in here. You can safely delete
 //    it when you're done.
 //  - You have helper methods in this file. Move them out to keep these resolver files clean.
-
-// func (r *mutationResolver) CreateToken(ctx context.Context, input model.NewUser) (string, error) {
-// 	var user model.NewUser
-// 	user.Username = input.Username
-// 	token, err := auth.CreateNewToken(user.Username)
-// 	if err != nil {
-// 		return "", nil
-// 	}
-
-// 	return token, nil
-// 	// panic(fmt.Errorf("not implemented"))
-// }
