@@ -11,6 +11,7 @@ import (
 	"github.com/Salaton/screening-test.git/graph"
 	"github.com/Salaton/screening-test.git/graph/generated"
 	db "github.com/Salaton/screening-test.git/postgres"
+	"github.com/go-chi/chi"
 )
 
 const defaultPort = "8080"
@@ -21,8 +22,9 @@ func main() {
 		port = defaultPort
 	}
 
-	// Using our middleware
-	auth.Middleware()
+	router := chi.NewRouter()
+
+	router.Use(auth.Middleware())
 	srv := handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &graph.Resolver{}}))
 
 	http.Handle("/", playground.Handler("GraphQL playground", "/query"))
