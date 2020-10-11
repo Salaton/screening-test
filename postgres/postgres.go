@@ -17,10 +17,12 @@ type DBClient interface {
 	CreateOrder(model.OrderInput)
 	CreateCustomer(model.CustomerInput)
 	CreateUser(model.CreatedUser)
-	Authenticate() bool
+	Authenticate(model.LoginDetails) bool
+	GetUserID(username string) (int, error)
+	FindCustomers()
 }
 
-// PostgresClient for db references
+// PostgresClient exposes reference to the DB
 type PostgresClient struct {
 	db *gorm.DB
 }
@@ -36,15 +38,6 @@ func (ps *PostgresClient) Open(dbConnString string) error {
 	ps.db.AutoMigrate(&model.Customer{}, &model.Order{}, &model.Item{}, &model.User{})
 
 	return nil
-}
-
-func (ps *PostgresClient) CreateItem(item model.ItemInput) {
-	if err := ps.db.Create(&model.Item{
-		Name:     item.Name,
-		Quantity: item.Quantity,
-	}).Error; err != nil {
-		log.Printf("Something went wrong %v", err.Error())
-	}
 }
 
 func (ps *PostgresClient) CreateUser(user model.CreatedUser) {
@@ -102,22 +95,10 @@ func (ps *PostgresClient) FindCustomers() model.Customer {
 }
 
 // Method to authenticate users
-func (ps *PostgresClient) Authenticate() bool {
-	var user model.User
+func (ps *PostgresClient) Authenticate(user model.LoginDetails) bool {
 	row := ps.db.Table("users").Where("username = ?", user.Username).Select("password").Row()
 	var hashedPassword string
 	row.Scan(&hashedPassword)
 
 	return CheckPasswordHash(user.Password, hashedPassword)
 }
-
-// func (ps *PostgresClient) FetchAllOrdersForCustomer(custID string) {
-// 	var customer Customer
-// 	if err := ps.db.Where("id = ?", custID).Preload("Orders").First(&customer).Error; err != nil {
-// 		log.Printf("Something bad happened %v", err.Error())
-// 	}
-
-// 	for _, order := range customer.Orders {
-// 		log.Printf("ORDER %v", order)
-// 	}
-// }
