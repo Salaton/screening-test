@@ -5,10 +5,10 @@ import (
 	"net/http"
 
 	model "github.com/Salaton/screening-test.git/graph/model"
-	users "github.com/Salaton/screening-test.git/users"
+	db "github.com/Salaton/screening-test.git/postgres"
 )
 
-var usermethod users.UserMethodsInterface
+var DB db.DBClient
 
 var userCtxKey = &contextKey{"user"}
 
@@ -36,8 +36,8 @@ func Middleware() func(http.Handler) http.Handler {
 			}
 
 			// create user and check if user exists in db
-			user := model.User{Username: username}
-			id, err := usermethod.GetUserID(username)
+			user := model.User{}
+			id, err := DB.GetUserID(username)
 			if err != nil {
 				next.ServeHTTP(w, r)
 				return
