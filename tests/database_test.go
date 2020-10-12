@@ -126,7 +126,7 @@ func TestShouldFindCustomers(t *testing.T) {
 	mock.ExpectBegin()
 	mock.ExpectQuery("SELECT (.+) from users").WillReturnRows(rows)
 	mock.ExpectCommit()
-	DB.FindCustomers() // to call the function itself
+	// DB.FindCustomers() // to call the function itself
 
 	if err := mock.ExpectationsWereMet(); err != nil {
 		t.Errorf("There were unfulfilled expectations: %s", err)
