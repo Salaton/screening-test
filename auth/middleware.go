@@ -4,8 +4,8 @@ import (
 	"context"
 	"net/http"
 
-	model "github.com/Salaton/screening-test.git/graph/model"
-	db "github.com/Salaton/screening-test.git/postgres"
+	model "github.com/Salaton/screening-test/graph/model"
+	db "github.com/Salaton/screening-test/postgres"
 )
 
 var DB db.DBClient
