@@ -55,6 +55,8 @@ func (s *Suite) Test_repository_GetUserByID() {
 		username = "Elvis"
 		password = "password12345"
 	)
+	s.mock.MatchExpectationsInOrder(false)
+	s.mock.ExpectBegin()
 	s.mock.ExpectQuery("SELECT (.+) FROM `users`").
 		WillReturnRows(sqlmock.NewRows([]string{"id", "username", "password"}).
 			AddRow(id, username, password))
@@ -64,6 +66,7 @@ func (s *Suite) Test_repository_GetUserByID() {
 	// 	WithArgs(id).
 	// 	WillReturnRows(sqlmock.NewRows([]string{"id", "username", "password"}).
 	// 		AddRow(id, username, password))
+	s.mock.ExpectCommit()
 
 	res, err := s.database.GetUserID(username)
 

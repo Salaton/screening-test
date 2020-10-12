@@ -18,12 +18,17 @@ func TestPostingToDatabase(t *testing.T) {
 	}
 	defer db.Close()
 
+	mock.ExpectBegin()
 	// Create rows in that mocked database
 	rows := sqlmock.NewRows([]string{
 		"id", "name", "phonenumber", "email",
 	}).AddRow(1, "Elvis", "254712345676", "elvis@gmail.com").AddRow(2, "Timothy", "254712345676", "tim@gmail.com")
+	mock.MatchExpectationsInOrder(false)
 
 	mock.ExpectQuery("INSERT INTO customers name, phonenumber,email").WillReturnRows(rows)
+	mock.ExpectRollback()
+	mock.ExpectCommit()
+	// mock.ExpectQuery("INSERT INTO customers name, phonenumber,email").WillReturnRows(rows)
 	// var customer []model.Customer
 	// customer1 := model.Customer{
 	// 	Name:        "Elvis",
