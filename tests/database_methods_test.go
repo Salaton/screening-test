@@ -5,8 +5,8 @@ import (
 	"testing"
 
 	"github.com/DATA-DOG/go-sqlmock"
-	model "github.com/Salaton/screening-test.git/graph/model"
-	postgresdatabase "github.com/Salaton/screening-test.git/postgres"
+	model "github.com/Salaton/screening-test/graph/model"
+	postgresdatabase "github.com/Salaton/screening-test/postgres"
 	"github.com/go-test/deep"
 
 	"github.com/jinzhu/gorm"

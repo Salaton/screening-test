@@ -3,9 +3,9 @@ package tests
 import (
 	"testing"
 
-	auth "github.com/Salaton/screening-test.git/auth"
-	notification "github.com/Salaton/screening-test.git/notification"
-	db "github.com/Salaton/screening-test.git/postgres"
+	auth "github.com/Salaton/screening-test/auth"
+	notification "github.com/Salaton/screening-test/notification"
+	db "github.com/Salaton/screening-test/postgres"
 )
 
 func TestHashPassword(t *testing.T) {

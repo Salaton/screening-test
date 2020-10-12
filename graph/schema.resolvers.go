@@ -7,11 +7,11 @@ import (
 	"context"
 	"fmt"
 
-	auth "github.com/Salaton/screening-test.git/auth"
-	"github.com/Salaton/screening-test.git/graph/generated"
-	model "github.com/Salaton/screening-test.git/graph/model"
-	db "github.com/Salaton/screening-test.git/postgres"
-	users "github.com/Salaton/screening-test.git/users"
+	auth "github.com/Salaton/screening-test/auth"
+	"github.com/Salaton/screening-test/graph/generated"
+	model "github.com/Salaton/screening-test/graph/model"
+	db "github.com/Salaton/screening-test/postgres"
+	users "github.com/Salaton/screening-test/users"
 )
 
 var DB db.DBClient

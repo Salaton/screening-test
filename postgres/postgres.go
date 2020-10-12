@@ -4,8 +4,8 @@ import (
 	"log"
 	"time"
 
-	model "github.com/Salaton/screening-test.git/graph/model"
-	notification "github.com/Salaton/screening-test.git/notification"
+	model "github.com/Salaton/screening-test/graph/model"
+	notification "github.com/Salaton/screening-test/notification"
 
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"

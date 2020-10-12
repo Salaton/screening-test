@@ -5,7 +5,7 @@ import (
 
 	"github.com/DATA-DOG/go-sqlmock"
 
-	database "github.com/Salaton/screening-test.git/postgres"
+	database "github.com/Salaton/screening-test/postgres"
 )
 
 var DB database.DBClient

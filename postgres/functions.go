@@ -1,7 +1,7 @@
 package postgres
 
 import (
-	model "github.com/Salaton/screening-test.git/graph/model"
+	model "github.com/Salaton/screening-test/graph/model"
 	"golang.org/x/crypto/bcrypt"
 )
 

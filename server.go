@@ -7,10 +7,10 @@ import (
 
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/playground"
-	auth "github.com/Salaton/screening-test.git/auth"
-	"github.com/Salaton/screening-test.git/graph"
-	"github.com/Salaton/screening-test.git/graph/generated"
-	db "github.com/Salaton/screening-test.git/postgres"
+	auth "github.com/Salaton/screening-test/auth"
+	"github.com/Salaton/screening-test/graph"
+	"github.com/Salaton/screening-test/graph/generated"
+	db "github.com/Salaton/screening-test/postgres"
 	"github.com/go-chi/chi"
 )
 
