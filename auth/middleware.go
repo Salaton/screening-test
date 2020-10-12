@@ -6,14 +6,24 @@ import (
 
 	model "github.com/Salaton/screening-test/graph/model"
 	db "github.com/Salaton/screening-test/postgres"
+	"gorm.io/gorm"
 )
 
 var DB db.DBClient
 
 var userCtxKey = &contextKey{"user"}
 
+// PostgresClient exposes reference to the DB
+type PostgresClient struct {
+	db *gorm.DB
+}
+
 type contextKey struct {
 	name string
+}
+
+type MiddlewareMethod interface {
+	Middleware()
 }
 
 func Middleware() func(http.Handler) http.Handler {
@@ -28,21 +38,23 @@ func Middleware() func(http.Handler) http.Handler {
 			}
 
 			//validate jwt token
-			tokenStr := header
-			username, err := ParseToken(tokenStr)
+			// tokenStr := header
+			// Should return the Username that was used to generate the token
+			username, err := ParseToken(header)
 			if err != nil {
 				http.Error(w, "Invalid token", http.StatusForbidden)
 				return
 			}
 
 			// create user and check if user exists in db
-			user := model.User{}
-			id, err := DB.GetUserID(username)
+			user, err := DB.GetUser(username)
+			// var user model.User
+			// row := ps.db.Table("users").Where("username = ?", username).Select("id,username").Row()
+			// row.Scan(&user)
 			if err != nil {
 				next.ServeHTTP(w, r)
 				return
 			}
-			user.ID = id
 			// put it in context
 			ctx := context.WithValue(r.Context(), userCtxKey, &user)
 

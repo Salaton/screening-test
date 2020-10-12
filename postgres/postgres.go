@@ -19,6 +19,7 @@ type DBClient interface {
 	CreateUser(model.CreatedUser)
 	Authenticate(model.LoginDetails) bool
 	GetUserID(username string) (int, error)
+	GetUser(username string) (model.User, error)
 }
 
 // PostgresClient exposes reference to the DB
@@ -46,6 +47,14 @@ func (ps *PostgresClient) CreateUser(user model.CreatedUser) {
 	}).Error; err != nil {
 		log.Printf("Something went wrong %v", err)
 	}
+}
+
+func (ps *PostgresClient) GetUser(username string) (model.User, error) {
+	var user model.User
+	row := ps.db.Table("users").Where("username = ?", username).Select("id,username").Row()
+	row.Scan(&user.ID, &user.Username)
+
+	return user, nil
 }
 
 // GetUserID -> Check if a user exists in a DB using the username

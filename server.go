@@ -5,8 +5,7 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/99designs/gqlgen/graphql/handler"
-	"github.com/99designs/gqlgen/graphql/playground"
+	"github.com/99designs/gqlgen/handler"
 	auth "github.com/Salaton/screening-test/auth"
 	"github.com/Salaton/screening-test/graph"
 	"github.com/Salaton/screening-test/graph/generated"
@@ -24,18 +23,20 @@ func main() {
 
 	router := chi.NewRouter()
 
+	// router.Use(auth.Middleware())
+	// var auth auth.MiddlewareMethod
 	router.Use(auth.Middleware())
-	srv := handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &graph.Resolver{}}))
+	srv := handler.GraphQL(generated.NewExecutableSchema(generated.Config{Resolvers: &graph.Resolver{}}))
 
-	http.Handle("/", playground.Handler("GraphQL playground", "/query"))
-	http.Handle("/query", srv)
+	router.Handle("/", handler.Playground("GraphQL playground", "/query"))
+	router.Handle("/query", srv)
 
 	if err := InitDB(); err != nil {
 		log.Fatalf("FAILED TO CONNECT TO DB %v", err.Error())
 	}
 
 	log.Printf("connect to http://localhost:%s/ for GraphQL playground", port)
-	log.Fatal(http.ListenAndServe(":"+port, nil))
+	log.Fatal(http.ListenAndServe(":"+port, router))
 }
 
 // InitDB function to start the db connections process
