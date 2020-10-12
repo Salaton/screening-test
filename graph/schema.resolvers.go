@@ -19,7 +19,6 @@ var DB db.DBClient
 // var usermethod users.UserMethodsInterface
 
 func (r *mutationResolver) CreateUser(ctx context.Context, input model.CreatedUser) (string, error) {
-	// var user model.User
 	DB.CreateUser(input)
 
 	token, err := auth.CreateNewToken(input.Username)
