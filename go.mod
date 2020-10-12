@@ -2,6 +2,7 @@ module github.com/Salaton/screening-test.git
 
 go 1.15
 
+
 require (
 	github.com/99designs/gqlgen v0.13.0
 	github.com/DATA-DOG/go-sqlmock v1.5.0
