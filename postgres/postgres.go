@@ -19,7 +19,6 @@ type DBClient interface {
 	CreateUser(model.CreatedUser)
 	Authenticate(model.LoginDetails) bool
 	GetUserID(username string) (int, error)
-	// FindCustomers(model.Customer)
 }
 
 // PostgresClient exposes reference to the DB
