@@ -71,7 +71,7 @@ func (r *queryResolver) Customers(ctx context.Context) ([]*model.Customer, error
 
 func (r *queryResolver) Orders(ctx context.Context) ([]*model.Order, error) {
 	var orders []*model.Order
-	err := r.db.Preload("customers").Find(&orders).Error
+	err := r.db.Find(&orders).Error
 	if err != nil {
 		return nil, err
 	}
