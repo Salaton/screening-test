@@ -1,4 +1,4 @@
-module github.com/Salaton/screening-test.git
+module github.com/Salaton/screening-test
 
 go 1.15
 
