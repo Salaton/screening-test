@@ -7,6 +7,7 @@ require (
 	github.com/davidmutia47/AfricasTalkingGateway v0.0.0-20180531143643-d0f34a8bbe31
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/go-chi/chi v4.1.2+incompatible
+	github.com/jinzhu/gorm v1.9.16
 	github.com/vektah/gqlparser/v2 v2.1.0
 	golang.org/x/crypto v0.0.0-20201012173705-84dcc777aaee
 	gorm.io/driver/postgres v1.0.2
