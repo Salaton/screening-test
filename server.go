@@ -21,34 +21,28 @@ func main() {
 		port = defaultPort
 	}
 
+	db, err := InitDB()
+	if err != nil {
+		log.Fatalf("FAILED TO CONNECT TO DB %v", err.Error())
+	}
+
 	router := chi.NewRouter()
 
-	// router.Use(auth.Middleware())
-	// var auth auth.MiddlewareMethod
-	router.Use(auth.Middleware())
+	router.Use(auth.Middleware(db))
 	srv := handler.GraphQL(generated.NewExecutableSchema(generated.Config{Resolvers: &graph.Resolver{}}))
 
 	router.Handle("/", handler.Playground("GraphQL playground", "/query"))
 	router.Handle("/query", srv)
 
-	// (auth.Middleware())
-
 	// srv := handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &graph.Resolver{}}))
-
-	// http.Handle("/", playground.Handler("GraphQL playground", "/query"))
-	// http.Handle("/query", srv)
-
-	if err := InitDB(); err != nil {
-		log.Fatalf("FAILED TO CONNECT TO DB %v", err.Error())
-	}
 
 	log.Printf("connect to http://localhost:%s/ for GraphQL playground", port)
 	log.Fatal(http.ListenAndServe(":"+port, router))
 }
 
 // InitDB function to start the db connections process
-func InitDB() error {
+func InitDB() (db.DBClient, error) {
 	graph.DB = &db.PostgresClient{}
 	dsn := "user=sala password=$krychowiak-254$ dbname=savannahtest port=5432 sslmode=disable TimeZone=Africa/Nairobi"
-	return graph.DB.Open(dsn)
+	return graph.DB, graph.DB.Open(dsn)
 }
