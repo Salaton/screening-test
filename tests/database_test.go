@@ -102,15 +102,15 @@ func TestShouldGetPosts(t *testing.T) {
 		t.Fatalf("An error '%s' was not expected when opening a stub database connection", err)
 	}
 	defer db.Close()
-
+	mock.ExpectBegin()
+	mock.MatchExpectationsInOrder(false)
 	rows := sqlmock.NewRows([]string{
 		"id", "name", "phonenumber", "email",
 	}).AddRow(1, "Elvis", "254712345676", "elvis@gmail.com").AddRow(2, "Timothy", "254712345676", "tim@gmail.com")
 
-	mock.ExpectBegin()
 	mock.ExpectQuery("SELECT (.+) from users").WillReturnRows(rows)
 	mock.ExpectCommit()
-	DB.GetUserID("Elvis") // to call the function itself
+	// DB.GetUserID("Elvis") // to call the function itself
 
 	if err := mock.ExpectationsWereMet(); err != nil {
 		t.Errorf("There were unfulfilled expectations: %s", err)
