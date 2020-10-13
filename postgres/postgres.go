@@ -20,6 +20,7 @@ type DBClient interface {
 	Authenticate(model.LoginDetails) bool
 	GetUserID(username string) (int, error)
 	GetUser(username string) (model.User, error)
+	FindCustomers() *[]model.Customer
 }
 
 // PostgresClient exposes reference to the DB
@@ -94,9 +95,9 @@ func (ps *PostgresClient) CreateCustomer(customer model.CustomerInput) {
 	}
 }
 
-func (ps *PostgresClient) FindCustomers() model.Customer {
-	var customer model.Customer
-	if err := ps.db.Find(&customer).Error; err != nil {
+func (ps *PostgresClient) FindCustomers() *[]model.Customer {
+	var customer *[]model.Customer
+	if err := ps.db.Table("customers").Find(&customer).Error; err != nil {
 		log.Printf("Something bad happened %v", err.Error())
 	}
 	return customer
