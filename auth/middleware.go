@@ -6,30 +6,22 @@ import (
 
 	model "github.com/Salaton/screening-test/graph/model"
 	db "github.com/Salaton/screening-test/postgres"
-	"gorm.io/gorm"
 )
 
 var DB db.DBClient
 
 var userCtxKey = &contextKey{"user"}
 
-// PostgresClient exposes reference to the DB
-type PostgresClient struct {
-	db *gorm.DB
-}
-
 type contextKey struct {
 	name string
-}
-
-type MiddlewareMethod interface {
-	Middleware()
 }
 
 func Middleware() func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			header := r.Header.Get("Authorization")
+			// splitToken := strings.Split(reqToken, "Bearer ")
+			// reqToken = splitToken[1]
 
 			// Allow unauthenticated users in
 			if header == "" {
@@ -46,15 +38,17 @@ func Middleware() func(http.Handler) http.Handler {
 				return
 			}
 
-			// create user and check if user exists in db
+			//check if user exists in db
 			user, err := DB.GetUser(username)
 			// var user model.User
 			// row := ps.db.Table("users").Where("username = ?", username).Select("id,username").Row()
 			// row.Scan(&user)
 			if err != nil {
 				next.ServeHTTP(w, r)
+
 				return
 			}
+
 			// put it in context
 			ctx := context.WithValue(r.Context(), userCtxKey, &user)
 
