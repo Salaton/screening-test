@@ -63,20 +63,17 @@ func (r *mutationResolver) CreateOrder(ctx context.Context, input model.OrderInp
 func (r *queryResolver) Customers(ctx context.Context) ([]*model.Customer, error) {
 	var customers []*model.Customer
 	// r.db.Find(&customers)
-	// DB.FindCustomers(&customers)
+	DB.FindCustomers()
 	return customers, nil
-
-	// panic(fmt.Errorf("not implemented"))
 }
 
 func (r *queryResolver) Orders(ctx context.Context) ([]*model.Order, error) {
 	var orders []*model.Order
-	err := r.db.Find(&orders).Error
+	err := r.db.Preload("orders").Find(&orders).Error
 	if err != nil {
 		return nil, err
 	}
 	return orders, nil
-	// panic(fmt.Errorf("not implemented"))
 }
 
 // Mutation returns generated.MutationResolver implementation.
