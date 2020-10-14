@@ -5,6 +5,8 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/joho/godotenv"
+
 	"github.com/99designs/gqlgen/handler"
 	auth "github.com/Salaton/screening-test/auth"
 	"github.com/Salaton/screening-test/graph"
@@ -15,10 +17,18 @@ import (
 
 const defaultPort = "8080"
 
+type environmentVar struct {
+}
+
 func main() {
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = defaultPort
+	}
+	// Load our .env file
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal("Error loading .env file")
 	}
 
 	db, err := InitDB()
@@ -43,6 +53,13 @@ func main() {
 // InitDB function to start the db connections process
 func InitDB() (db.DBClient, error) {
 	graph.DB = &db.PostgresClient{}
-	dsn := "user=sala password=$krychowiak-254$ dbname=savannahtest port=5432 sslmode=disable TimeZone=Africa/Nairobi"
+	user := os.Getenv("user")
+	password := os.Getenv("password")
+	dbname := os.Getenv("dbname")
+	port := os.Getenv("port")
+	sslmode := os.Getenv("sslmode")
+	TimeZone := os.Getenv("TimeZone")
+	dsn := "user=" + user + " password=" + password + " dbname=" + dbname + " port=" + port + " sslmode=" + sslmode + " TimeZone=" + TimeZone
+	// dsn := "user=sala password=$krychowiak-254$ dbname=savannahtest port=5432 sslmode=disable TimeZone=Africa/Nairobi"
 	return graph.DB, graph.DB.Open(dsn)
 }
