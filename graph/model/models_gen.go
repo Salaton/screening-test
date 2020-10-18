@@ -9,8 +9,9 @@ import (
 type Customer struct {
 	ID          int    `json:"id"`
 	Name        string `json:"name"`
-	Phonenumber string `json:"Phonenumber"`
-	Email       string `json:"Email"`
+	Email       string `json:"email"`
+	Phonenumber string `json:"phonenumber"`
+	Password    string `json:"password"`
 }
 
 type Item struct {
@@ -34,25 +35,15 @@ type Order struct {
 	DateOrderPlaced time.Time `json:"date_order_placed"`
 }
 
-type User struct {
-	ID       int    `json:"id"`
-	Username string `json:"username"`
-	Password string `json:"password"`
-}
-
-type CreatedUser struct {
-	Username string `json:"username"`
-	Password string `json:"password"`
-}
-
 type CustomerInput struct {
 	Name        string `json:"name"`
-	Phonenumber string `json:"Phonenumber"`
-	Email       string `json:"Email"`
+	Email       string `json:"email"`
+	Phonenumber string `json:"phonenumber"`
+	Password    string `json:"password"`
 }
 
 type LoginDetails struct {
-	Username string `json:"username"`
+	Email    string `json:"email"`
 	Password string `json:"password"`
 }
 

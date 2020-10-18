@@ -11,39 +11,26 @@ import (
 	"github.com/Salaton/screening-test/graph/generated"
 	model "github.com/Salaton/screening-test/graph/model"
 	db "github.com/Salaton/screening-test/postgres"
-	users "github.com/Salaton/screening-test/users"
+	"github.com/Salaton/screening-test/users"
 )
 
 var DB db.DBClient
 
-// var usermethod users.UserMethodsInterface
-
-func (r *mutationResolver) CreateUser(ctx context.Context, input model.CreatedUser) (string, error) {
-	DB.CreateUser(input)
-
-	token, err := auth.CreateNewToken(input.Username)
-	if err != nil {
-		return "", err
-	}
-	return token, nil
-}
-
 func (r *mutationResolver) Login(ctx context.Context, input model.LoginDetails) (string, error) {
-	var user model.User
-	user.Username = input.Username
-	user.Password = input.Password
+	var customer model.Customer
+	customer.Email = input.Email
+	customer.Password = input.Password
 	correct := DB.Authenticate(input)
 
 	if !correct {
 		// 1
 		return "", &users.WrongUsernameOrPasswordError{}
 	}
-	token, err := auth.CreateNewToken(input.Username)
+	token, err := auth.CreateNewToken(input.Email)
 	if err != nil {
 		return "", err
 	}
 	return token, nil
-
 }
 
 func (r *mutationResolver) CreateCustomer(ctx context.Context, input model.CustomerInput) (*model.Customer, error) {
