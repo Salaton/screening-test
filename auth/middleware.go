@@ -27,15 +27,14 @@ func Middleware(db db.DBClient) func(http.Handler) http.Handler {
 			}
 
 			//validate jwt token
-
-			username, err := ParseToken(header)
+			email, err := ParseToken(header)
 			if err != nil {
 				http.Error(w, "Invalid token", http.StatusForbidden)
 				return
 			}
 
-			// //check if user exists in db
-			user, err := db.GetUser(username)
+			// //check if customer exists in db
+			customer, err := db.GetCustomer(email)
 
 			if err != nil {
 				next.ServeHTTP(w, r)
@@ -43,7 +42,7 @@ func Middleware(db db.DBClient) func(http.Handler) http.Handler {
 			}
 
 			// put it in context
-			ctx := context.WithValue(r.Context(), userCtxKey, &user)
+			ctx := context.WithValue(r.Context(), userCtxKey, &customer)
 
 			// and call the next with our new context
 			r = r.WithContext(ctx)
@@ -53,7 +52,7 @@ func Middleware(db db.DBClient) func(http.Handler) http.Handler {
 }
 
 // ForContext finds the user from the context. REQUIRES Middleware to have run.
-func ForContext(ctx context.Context) *model.User {
-	raw, _ := ctx.Value(userCtxKey).(*model.User)
+func ForContext(ctx context.Context) *model.Customer {
+	raw, _ := ctx.Value(userCtxKey).(*model.Customer)
 	return raw
 }
