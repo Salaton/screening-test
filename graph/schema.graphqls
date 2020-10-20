@@ -21,6 +21,7 @@ type Order {
 
 type Item {
   id: Int!
+  order: Order!
   name: String!
   quantity: Int!
 }
@@ -55,6 +56,8 @@ type Mutation {
   login(input: loginDetails!): String!
   createCustomer(input: customerInput!): Customer!
   createOrder(input: orderInput!): Order!
+  updateOrder(orderID: Int, input: orderInput!): Order!
+  deleteOrder(orderID: Int!): String!
 }
 
 type Query {

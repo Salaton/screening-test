@@ -7,14 +7,12 @@ import (
 	"context"
 	"fmt"
 
-	auth "github.com/Salaton/screening-test/auth"
+	"github.com/Salaton/screening-test/auth"
 	"github.com/Salaton/screening-test/graph/generated"
-	model "github.com/Salaton/screening-test/graph/model"
+	"github.com/Salaton/screening-test/graph/model"
 	db "github.com/Salaton/screening-test/postgres"
 	"github.com/Salaton/screening-test/users"
 )
-
-var DB db.DBClient
 
 func (r *mutationResolver) Login(ctx context.Context, input model.LoginDetails) (string, error) {
 	var customer model.Customer
@@ -47,20 +45,23 @@ func (r *mutationResolver) CreateOrder(ctx context.Context, input model.OrderInp
 	return &model.Order{}, nil
 }
 
+func (r *mutationResolver) UpdateOrder(ctx context.Context, orderID *int, input model.OrderInput) (*model.Order, error) {
+	DB.UpdateOrder(*orderID, input)
+	return &model.Order{}, nil
+}
+
+func (r *mutationResolver) DeleteOrder(ctx context.Context, orderID int) (string, error) {
+	DB.DeleteOrder(orderID)
+	return "Order has been successfully deleted", nil
+	// panic(fmt.Errorf("not implemented"))
+}
+
 func (r *queryResolver) Customers(ctx context.Context) ([]*model.Customer, error) {
-	var customers []*model.Customer
-	// r.db.Find(&customers)
-	DB.FindCustomers()
-	return customers, nil
+	return DB.FindCustomers(), nil
 }
 
 func (r *queryResolver) Orders(ctx context.Context) ([]*model.Order, error) {
-	var orders []*model.Order
-	err := r.db.Preload("orders").Find(&orders).Error
-	if err != nil {
-		return nil, err
-	}
-	return orders, nil
+	return DB.FindOrders(), nil
 }
 
 // Mutation returns generated.MutationResolver implementation.
@@ -78,3 +79,4 @@ type queryResolver struct{ *Resolver }
 //  - When renaming or deleting a resolver the old code will be put in here. You can safely delete
 //    it when you're done.
 //  - You have helper methods in this file. Move them out to keep these resolver files clean.
+var DB db.DBClient
