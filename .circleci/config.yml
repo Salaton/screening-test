@@ -24,5 +24,6 @@ jobs:
 
       # specify any bash command here prefixed with `run: `
       - run: echo "export GOPROXY=https://goproxy.io" >> ~/.profile && source ~/.profile
+      - run: go get
       - run: go get -v -t -d ./...
       - run: go test -v ./...
