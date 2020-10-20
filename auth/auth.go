@@ -8,13 +8,15 @@ import (
 
 var SecretKey = []byte("SecretKeyThatShouldBeInTheEnvFile")
 
-// CreateNewToken function that generates a token from a username
-func CreateNewToken(username string) (string, error) {
+// var SecretKey = os.Getenv("HashingSecretKey")
+
+// CreateNewToken function that generates a token from a email
+func CreateNewToken(email string) (string, error) {
 
 	// Create a new token Having a map of out claims
-	// Statements about out user..
+	// Statements about our customer..
 	newToken := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"username": username,
+		"email": email,
 	})
 
 	newTokenString, err := newToken.SignedString(SecretKey)
@@ -34,9 +36,8 @@ func ParseToken(tokenString string) (string, error) {
 		return SecretKey, nil
 	})
 	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
-		username := claims["username"].(string)
-		// password := claims["password"].(string)
-		return username, nil
+		email := claims["email"].(string)
+		return email, nil
 	}
 	return "", err
 

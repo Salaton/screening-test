@@ -3,15 +3,11 @@ scalar Time
 type Customer {
   id: Int!
   name: String!
-  Phonenumber: String!
-  Email: String!
-}
-
-type User {
-  id: Int!
-  username: String!
+  email: String!
+  phonenumber: String!
   password: String!
 }
+
 type Order {
   id: Int!
   # Somewhat A relationship to the customer type
@@ -25,24 +21,21 @@ type Order {
 
 type Item {
   id: Int!
+  order: Order!
   name: String!
   quantity: Int!
 }
 
-input createdUser {
-  username: String!
-  password: String!
-}
-
 input loginDetails {
-  username: String!
+  email: String!
   password: String!
 }
 
 input customerInput {
   name: String!
-  Phonenumber: String!
-  Email: String!
+  email: String!
+  phonenumber: String!
+  password: String!
 }
 
 input orderInput {
@@ -59,11 +52,12 @@ input ItemInput {
 
 type Mutation {
   # This will return the token needed for authentication
-  createUser(input: createdUser!): String!
   # Returns login success / not
   login(input: loginDetails!): String!
   createCustomer(input: customerInput!): Customer!
   createOrder(input: orderInput!): Order!
+  updateOrder(orderID: Int, input: orderInput!): Order!
+  deleteOrder(orderID: Int!): String!
 }
 
 type Query {

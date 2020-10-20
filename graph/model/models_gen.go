@@ -9,15 +9,17 @@ import (
 type Customer struct {
 	ID          int    `json:"id"`
 	Name        string `json:"name"`
-	Phonenumber string `json:"Phonenumber"`
-	Email       string `json:"Email"`
+	Email       string `json:"email"`
+	Phonenumber string `json:"phonenumber"`
+	Password    string `json:"password"`
 }
 
 type Item struct {
 	ID       int    `json:"id"`
+	Order    *Order `json:"order" gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"`
 	Name     string `json:"name"`
 	Quantity int    `json:"quantity"`
-	OrderID  int    `json:"-"`
+	OrderID  int    `json:"-" gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"`
 }
 
 type ItemInput struct {
@@ -29,30 +31,20 @@ type Order struct {
 	ID              int       `json:"id"`
 	Customer        *Customer `json:"customer"`
 	CustomerID      int       `json:"customer_id"`
-	Item            []*Item   `json:"item"`
+	Item            []*Item   `json:"item" gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"`
 	Price           float64   `json:"price"`
 	DateOrderPlaced time.Time `json:"date_order_placed"`
 }
 
-type User struct {
-	ID       int    `json:"id"`
-	Username string `json:"username"`
-	Password string `json:"password"`
-}
-
-type CreatedUser struct {
-	Username string `json:"username"`
-	Password string `json:"password"`
-}
-
 type CustomerInput struct {
 	Name        string `json:"name"`
-	Phonenumber string `json:"Phonenumber"`
-	Email       string `json:"Email"`
+	Email       string `json:"email"`
+	Phonenumber string `json:"phonenumber"`
+	Password    string `json:"password"`
 }
 
 type LoginDetails struct {
-	Username string `json:"username"`
+	Email    string `json:"email"`
 	Password string `json:"password"`
 }
 

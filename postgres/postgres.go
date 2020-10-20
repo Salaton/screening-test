@@ -16,11 +16,13 @@ type DBClient interface {
 	Open(dbConnString string) error
 	CreateOrder(model.OrderInput)
 	CreateCustomer(model.CustomerInput)
-	CreateUser(model.CreatedUser)
 	Authenticate(model.LoginDetails) bool
-	GetUserID(username string) (int, error)
-	GetUser(username string) (model.User, error)
-	FindCustomers() *[]model.Customer
+	GetCustomerID(email string) (int, error)
+	GetCustomer(email string) (model.Customer, error)
+	FindCustomers() []*model.Customer
+	FindOrders() []*model.Order
+	DeleteOrder(id int)
+	UpdateOrder(orderID int, order model.OrderInput)
 }
 
 // PostgresClient exposes reference to the DB
@@ -36,34 +38,25 @@ func (ps *PostgresClient) Open(dbConnString string) error {
 		return err
 	}
 	// Create Customer, Item and Order tables..
-	ps.db.AutoMigrate(&model.Customer{}, &model.Order{}, &model.Item{}, &model.User{})
+	ps.db.AutoMigrate(&model.Customer{}, &model.Order{}, &model.Item{})
 
 	return nil
 }
 
-func (ps *PostgresClient) CreateUser(user model.CreatedUser) {
-	if err := ps.db.Create(&model.User{
-		Username: user.Username,
-		Password: HashPassword(user.Password),
-	}).Error; err != nil {
-		log.Printf("Something went wrong %v", err)
-	}
+func (ps *PostgresClient) GetCustomer(email string) (model.Customer, error) {
+	var customer model.Customer
+	row := ps.db.Table("customers").Where("email = ?", email).Select("id,name,phonenumber,email,").Row()
+	row.Scan(&customer.ID, &customer.Name, &customer.Phonenumber, &customer.Email)
+
+	return customer, nil
 }
 
-func (ps *PostgresClient) GetUser(username string) (model.User, error) {
-	var user model.User
-	row := ps.db.Table("users").Where("username = ?", username).Select("id,username").Row()
-	row.Scan(&user.ID, &user.Username)
-
-	return user, nil
-}
-
-// GetUserID -> Check if a user exists in a DB using the username
-func (ps *PostgresClient) GetUserID(username string) (int, error) {
-	var user model.User
-	row := ps.db.Table("users").Where("username = ?", username).Select("id").Row()
+// GetCustomerID -> Check if a customer exists in a DB using the Email
+func (ps *PostgresClient) GetCustomerID(email string) (int, error) {
+	var customer model.Customer
+	row := ps.db.Table("customers").Where("email = ?", email).Select("id").Row()
 	var id int
-	row.Scan(&user.ID)
+	row.Scan(&customer.ID)
 
 	return id, nil
 }
@@ -85,29 +78,63 @@ func (ps *PostgresClient) CreateOrder(order model.OrderInput) {
 
 }
 
+func (ps *PostgresClient) UpdateOrder(orderID int, order model.OrderInput) {
+	var customer model.Customer
+	if err := ps.db.Updates(&model.Order{
+		ID:              orderID,
+		CustomerID:      order.CustomerID,
+		Item:            loopOverItems(order.Item),
+		Price:           order.Price,
+		DateOrderPlaced: time.Now(),
+	}).Error; err != nil {
+		log.Printf("Something went wrong %v", err.Error())
+	}
+	// Use GORM API build SQL
+	row := ps.db.Table("customers").Where("id = ?", order.CustomerID).Select("phonenumber", "name").Row()
+	row.Scan(&customer.Phonenumber, &customer.Name)
+	notification.SendNotification(customer.Name, customer.Phonenumber)
+
+}
+
+func (ps *PostgresClient) DeleteOrder(id int) {
+	ps.db.Where("order_id = ?", id).Delete(&model.Item{})
+	ps.db.Delete(&model.Order{}, id)
+}
+
 func (ps *PostgresClient) CreateCustomer(customer model.CustomerInput) {
 	if err := ps.db.Create(&model.Customer{
 		Name:        customer.Name,
 		Phonenumber: customer.Phonenumber,
 		Email:       customer.Email,
+		Password:    HashPassword(customer.Password),
 	}).Error; err != nil {
 		log.Printf("Something went wrong %v", err.Error())
 	}
 }
 
-func (ps *PostgresClient) FindCustomers() *[]model.Customer {
-	var customer *[]model.Customer
+func (ps *PostgresClient) FindCustomers() []*model.Customer {
+	var customer []*model.Customer
 	if err := ps.db.Table("customers").Find(&customer).Error; err != nil {
 		log.Printf("Something bad happened %v", err.Error())
 	}
 	return customer
 }
 
-// Method to authenticate users
-func (ps *PostgresClient) Authenticate(user model.LoginDetails) bool {
-	row := ps.db.Table("users").Where("username = ?", user.Username).Select("password").Row()
+// FindOrders method to return all orders from the database
+func (ps *PostgresClient) FindOrders() []*model.Order {
+	var order []*model.Order
+	if err := ps.db.Table("orders").Preload("Customer").Preload("Item").Find(&order).Error; err != nil {
+		log.Printf("Something bad happened %v", err.Error())
+
+	}
+	return order
+}
+
+//Authenticate Method to authenticate customers
+func (ps *PostgresClient) Authenticate(customer model.LoginDetails) bool {
+	row := ps.db.Table("customers").Where("email = ?", customer.Email).Select("password").Row()
 	var hashedPassword string
 	row.Scan(&hashedPassword)
 
-	return CheckPasswordHash(user.Password, hashedPassword)
+	return CheckPasswordHash(customer.Password, hashedPassword)
 }
