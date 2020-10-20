@@ -80,7 +80,7 @@ func (ps *PostgresClient) CreateOrder(order model.OrderInput) {
 
 func (ps *PostgresClient) UpdateOrder(orderID int, order model.OrderInput) {
 	var customer model.Customer
-	if err := ps.db.Save(&model.Order{
+	if err := ps.db.Updates(&model.Order{
 		ID:              orderID,
 		CustomerID:      order.CustomerID,
 		Item:            loopOverItems(order.Item),
@@ -97,8 +97,7 @@ func (ps *PostgresClient) UpdateOrder(orderID int, order model.OrderInput) {
 }
 
 func (ps *PostgresClient) DeleteOrder(id int) {
-	var order model.Order
-	ps.db.Where("id = ?", order.ID).Delete(&model.Item{})
+	ps.db.Where("order_id = ?", id).Delete(&model.Item{})
 	ps.db.Delete(&model.Order{}, id)
 }
 
