@@ -3,12 +3,10 @@ name: CICD
 on: 
   push: 
     branches: 
-    — master 
-    — actions
+    — '*' 
   pull_request: 
     branches: 
-    — master 
-    — actions 
+    — '*' 
 # creating the job
 jobs:
   # The "build" workflow
