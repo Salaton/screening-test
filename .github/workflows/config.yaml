@@ -4,9 +4,8 @@ on:
   push: 
     branches: 
     — '*' 
-  pull_request: 
-    branches: 
-    — '*' 
+
+
 # creating the job
 jobs:
   # The "build" workflow
