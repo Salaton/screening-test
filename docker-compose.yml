@@ -1,0 +1,39 @@
+version: "3"
+services:
+  app:
+    container_name: screen-test-savannah
+    build: .
+    ports:
+      - 8080:8080
+
+    restart: on-failure
+    volumes:
+      - api:/usr/src/app/
+    depends_on:
+      - postgres-client
+    networks:
+      - fullstack
+
+  postgres-client:
+    image: postgres:latest
+    container_name: full_db_postgres
+    environment:
+      - POSTGRES_USER=${user}
+      - POSTGRES_PASSWORD=${password}
+      - POSTGRES_DB=${dbname}
+      - DATABASE_HOST=/var/run/postgresql
+    ports:
+      - "5433:5432"
+    volumes:
+      - database_postgres:/var/lib/postgresql/data
+    networks:
+      - fullstack
+
+volumes:
+  api:
+  database_postgres:
+
+# Networks to be created to facilitate communication between containers
+networks:
+  fullstack:
+    driver: bridge
