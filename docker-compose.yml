@@ -6,6 +6,8 @@ services:
     ports:
       - 8080:8080
 
+    links:
+      - postgres-client
     restart: on-failure
     volumes:
       - api:/usr/src/app/
@@ -13,6 +15,8 @@ services:
       - postgres-client
     networks:
       - fullstack
+    env_file:
+      - .env
 
   postgres-client:
     image: postgres:latest
@@ -21,7 +25,7 @@ services:
       - POSTGRES_USER=${user}
       - POSTGRES_PASSWORD=${password}
       - POSTGRES_DB=${dbname}
-      - DATABASE_HOST=/var/run/postgresql
+      - DATABASE_HOST=/cloudsql/screentest-294306:europe-west4:savannah-screentest
     ports:
       - "5433:5432"
     volumes:

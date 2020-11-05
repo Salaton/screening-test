@@ -58,8 +58,8 @@ func InitDB() (db.DBClient, error) {
 	dbname := os.Getenv("dbname")
 	port := os.Getenv("port")
 	sslmode := os.Getenv("sslmode")
-	TimeZone := os.Getenv("TimeZone")
-	dsn := "user=" + user + " password=" + password + " dbname=" + dbname + " port=" + port + " sslmode=" + sslmode + " TimeZone=" + TimeZone
+	// TimeZone := os.Getenv("TimeZone")
+	dsn := "user=" + user + " password=" + password + " dbname=" + dbname + " port=" + port + " sslmode=" + sslmode + " host=postgres-client"
 	// dsn := "user=sala password=$krychowiak-254$ dbname=savannahtest port=5432 sslmode=disable TimeZone=Africa/Nairobi"
 	return graph.DB, graph.DB.Open(dsn)
 }
