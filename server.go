@@ -5,8 +5,6 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/joho/godotenv"
-
 	"github.com/99designs/gqlgen/handler"
 	auth "github.com/Salaton/screening-test/auth"
 	"github.com/Salaton/screening-test/graph"
@@ -26,10 +24,10 @@ func main() {
 		port = defaultPort
 	}
 	// Load our .env file
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatal("Error loading .env file")
-	}
+	// err := godotenv.Load()
+	// if err != nil {
+	// 	log.Fatal("Error loading .env file. Cant be found")
+	// }
 
 	db, err := InitDB()
 	if err != nil {
