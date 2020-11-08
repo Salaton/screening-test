@@ -53,13 +53,14 @@ func main() {
 // InitDB function to start the db connections process
 func InitDB() (db.DBClient, error) {
 	graph.DB = &db.PostgresClient{}
-	user := os.Getenv("user")
-	password := os.Getenv("password")
-	dbname := os.Getenv("dbname")
-	port := os.Getenv("port")
-	sslmode := os.Getenv("sslmode")
+	user := os.Getenv("DB_USER")
+	password := os.Getenv("DB_PASSWORD")
+	port := os.Getenv("DB_PORT")
+	dbname := os.Getenv("DB_NAME")
+	host := os.Getenv("DB_HOST")
+	sslmode := os.Getenv("SSLMODE")
 	// TimeZone := os.Getenv("TimeZone")
-	dsn := "user=" + user + " password=" + password + " dbname=" + dbname + " port=" + port + " sslmode=" + sslmode + " host=postgres-client"
+	dsn := "user=" + user + " password=" + password + " port=" + port + " dbname=" + dbname + " sslmode=" + sslmode + " host=" + host
 	// dsn := "user=sala password=$krychowiak-254$ dbname=savannahtest port=5432 sslmode=disable TimeZone=Africa/Nairobi"
 	return graph.DB, graph.DB.Open(dsn)
 }
