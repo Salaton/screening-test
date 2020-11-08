@@ -23,12 +23,11 @@ ARG DB_PORT
 ENV DB_PORT=${DB_PORT}
 
 ARG DB_HOST
-ENV DB_HOST = ${DB_HOST}
+ENV DB_HOST=${DB_HOST}
 
 ARG SSLMODE
 ENV SSLMODE=${SSLMODE}
 
-ARG network=host
 
 ARG AFRICASTALKINGUSERNAME
 ENV AFRICASTALKINGUSERNAME=${AFRICASTALKINGUSERNAME}
@@ -48,7 +47,7 @@ CMD go mod download
 ## Add this go mod download command to pull in any dependencies
 RUN go get -d -v ./...
 
-COPY . /app/
+COPY . /app
 
 ## we run go build to compile the binary
 ## executable of our Go program
