@@ -11,6 +11,7 @@ import (
 	"github.com/Salaton/screening-test/graph/generated"
 	db "github.com/Salaton/screening-test/postgres"
 	"github.com/go-chi/chi"
+	"github.com/joho/godotenv"
 )
 
 const defaultPort = "8080"
@@ -24,10 +25,10 @@ func main() {
 		port = defaultPort
 	}
 	// Load our .env file
-	// err := godotenv.Load()
-	// if err != nil {
-	// 	log.Fatal("Error loading .env file. Cant be found")
-	// }
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal("Error loading .env file. Cant be found")
+	}
 
 	db, err := InitDB()
 	if err != nil {
@@ -53,12 +54,12 @@ func InitDB() (db.DBClient, error) {
 	graph.DB = &db.PostgresClient{}
 	user := os.Getenv("DB_USER")
 	password := os.Getenv("DB_PASSWORD")
-	port := os.Getenv("DB_PORT")
+	// port := os.Getenv("DB_PORT")
 	dbname := os.Getenv("DB_NAME")
 	host := os.Getenv("DB_HOST")
-	sslmode := os.Getenv("SSLMODE")
+	// sslmode := os.Getenv("SSLMODE")
 	// TimeZone := os.Getenv("TimeZone")
-	dsn := "user=" + user + " password=" + password + " port=" + port + " dbname=" + dbname + " sslmode=" + sslmode + " host=" + host
+	dsn := "user=" + user + " password=" + password + " host=" + host + " dbname=" + dbname
 	// dsn := "user=sala password=$krychowiak-254$ dbname=savannahtest port=5432 sslmode=disable TimeZone=Africa/Nairobi"
 	return graph.DB, graph.DB.Open(dsn)
 }
