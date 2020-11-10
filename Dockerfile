@@ -1,63 +1,41 @@
 ## We specify the base image we need for our
 ## go application
-FROM golang:1.14 as builder
-## We create an /app directory within our
-## image that will hold our application source
-## files
-ENV GO111MODULE=on
-RUN mkdir /app
-## We copy everything in the root directory
-## into our /app directory
-# ADD . /app
+FROM golang:alpine as builder
 
-# ARG DB_USER
-# ENV DB_USER=${DB_USER}
+# Add Maintainer info
+LABEL maintainer="Nairoua Salaton <nairouasalaton@gmail.com>"
 
-# ARG DB_PASSWORD
-# ENV DB_PASSWORD=${DB_PASSWORD}
+# Install git.
+# Git is required for fetching the dependencies.
+RUN apk update && apk add --no-cache git
 
-# ARG DB_NAME
-# ENV DB_NAME=${DB_NAME}
-
-# ARG DB_PORT
-# ENV DB_PORT=${DB_PORT}
-
-# ARG DB_HOST
-# ENV DB_HOST=${DB_HOST}
-
-# ARG SSLMODE
-# ENV SSLMODE=${SSLMODE}
-
-
-# ARG AFRICASTALKINGUSERNAME
-# ENV AFRICASTALKINGUSERNAME=${AFRICASTALKINGUSERNAME}
-
-# ARG AFRICASTALKINGAPIKEY
-# ENV AFRICASTALKINGAPIKEY=${AFRICASTALKINGUSERNAME}
-## We specify that we now wish to execute 
-## any further commands inside our /app
-## directory
+# Set the current working directory inside the container 
 WORKDIR /app
-# We want to populate the module cache based on the go.{mod,sum} files.
-# COPY go.mod .
-# COPY go.sum .
-COPY go.* $D/
-CMD go mod download 
 
-## Add this go mod download command to pull in any dependencies
-RUN go get -d -v ./...
+# Copy go mod and sum files 
+COPY go.mod go.sum ./
 
-COPY . /app
+# Download all dependencies. Dependencies will be cached if the go.mod and the go.sum files are not changed 
+RUN go mod download 
 
-## we run go build to compile the binary
-## executable of our Go program
-RUN cd /app/ && CGO_ENABLED=0 GOOS=linux go build -v -o server github.com/Salaton/screening-test
+# Copy the source from the current directory to the working Directory inside the container 
+COPY . .
 
-FROM alpine:3
-RUN apk add --no-cache ca-certificates 
-COPY --from=builder /app/server /server
-# Expose a port to the outside world to run our app
+# Build the Go app
+RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o main .
+
+# Start a new stage from scratch
+FROM alpine:latest
+RUN apk --no-cache add ca-certificates
+
+WORKDIR /root/
+
+# Copy the Pre-built binary file from the previous stage. Observe we also copied the .env file
+COPY --from=builder /app/main .
+COPY --from=builder /app/.env .       
+
+# Expose port 8080 to the outside world
 EXPOSE 8080
-## Our start command which kicks off
-## our newly created binary executable
-CMD ["/server"]
+
+#Command to run the executable
+CMD ["./main"]
