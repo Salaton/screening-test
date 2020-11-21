@@ -6,7 +6,7 @@ import (
 )
 
 // This file contains all functions that are used in the postgres.go file
-
+//Loops over the items and map them to the Item Struct
 func loopOverItems(itemsInput []*model.ItemInput) []*model.Item {
 	var items []*model.Item
 	for _, itemInput := range itemsInput {
