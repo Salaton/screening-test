@@ -14,6 +14,8 @@ import (
 	"github.com/Salaton/screening-test/users"
 )
 
+var DB db.DBClient
+
 func (r *mutationResolver) Login(ctx context.Context, input model.LoginDetails) (string, error) {
 	var customer model.Customer
 	customer.Email = input.Email
@@ -46,11 +48,19 @@ func (r *mutationResolver) CreateOrder(ctx context.Context, input model.OrderInp
 }
 
 func (r *mutationResolver) UpdateOrder(ctx context.Context, orderID *int, input model.OrderInput) (*model.Order, error) {
+	user := auth.ForContext(ctx)
+	if user == nil {
+		return &model.Order{}, fmt.Errorf("access denied, you need to log in")
+	}
 	DB.UpdateOrder(*orderID, input)
 	return &model.Order{}, nil
 }
 
 func (r *mutationResolver) DeleteOrder(ctx context.Context, orderID int) (string, error) {
+	user := auth.ForContext(ctx)
+	if user == nil {
+		return "", fmt.Errorf("access denied, you need to log in")
+	}
 	DB.DeleteOrder(orderID)
 	return "Order has been successfully deleted", nil
 	// panic(fmt.Errorf("not implemented"))
@@ -79,4 +89,3 @@ type queryResolver struct{ *Resolver }
 //  - When renaming or deleting a resolver the old code will be put in here. You can safely delete
 //    it when you're done.
 //  - You have helper methods in this file. Move them out to keep these resolver files clean.
-var DB db.DBClient
