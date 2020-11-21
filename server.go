@@ -27,7 +27,7 @@ func main() {
 	// Load our .env file
 	err := godotenv.Load()
 	if err != nil {
-		log.Fatal("Error loading .env file. Cant be found")
+		log.Println(".env file could not be found in this directory.")
 	}
 
 	db, err := InitDB()

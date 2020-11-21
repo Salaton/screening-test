@@ -30,6 +30,12 @@ type PostgresClient struct {
 	db *gorm.DB
 }
 
+func CreateRepository(db *gorm.DB) DBClient {
+	return &PostgresClient{
+		db: db,
+	}
+}
+
 // Open method to create connection with our DB
 func (ps *PostgresClient) Open(dbConnString string) error {
 	var err error
