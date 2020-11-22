@@ -31,7 +31,7 @@ func (s *Suite) SetupSuite() {
 		err error
 	)
 	dbURI := fmt.Sprintf("user=%s password=%s dbname=%s port=%s sslmode=%s TimeZone=%s",
-		"sala", "salaton", "testdatabase", "5432", "disable", "Africa/Nairobi")
+		"sala", "salaton", "savannahtest", "5432", "disable", "Africa/Nairobi")
 	db, s.mock, err = sqlmock.New()
 	require.NoError(s.T(), err)
 
