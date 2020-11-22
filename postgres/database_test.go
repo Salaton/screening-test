@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"regexp"
 	"testing"
-	"time"
 
 	model "github.com/Salaton/screening-test/graph/model"
 	"github.com/go-test/deep"
@@ -24,7 +23,6 @@ type Suite struct {
 	mock sqlmock.Sqlmock
 
 	repository DBClient
-	// customer   *model.Customer
 }
 
 func (s *Suite) SetupSuite() {
@@ -33,7 +31,7 @@ func (s *Suite) SetupSuite() {
 		err error
 	)
 	dbURI := fmt.Sprintf("user=%s password=%s dbname=%s port=%s sslmode=%s TimeZone=%s",
-		"sala", "salaton", "savannahtest", "5432", "disable", "Africa/Nairobi")
+		"sala", "salaton", "testdatabase", "5432", "disable", "Africa/Nairobi")
 	db, s.mock, err = sqlmock.New()
 	require.NoError(s.T(), err)
 
@@ -136,16 +134,15 @@ func (s *Suite) Test_FindAllOrders() {
 func (s *Suite) Test_Create_Order() {
 	var items []*model.ItemInput
 	item := &model.ItemInput{
-		Name:     "Macbook",
-		Quantity: 1,
+		ProductID: 1,
+		Quantity:  1,
 	}
 
 	items = append(items, item)
 	OrderDetails := model.OrderInput{
-		CustomerID:      10,
-		Item:            items,
-		Price:           5000.00,
-		DateOrderPlaced: time.Now(),
+		CustomerID: 10,
+		Item:       items,
+		Price:      5000.00,
 	}
 
 	s.mock.MatchExpectationsInOrder(false)
@@ -161,17 +158,16 @@ func (s *Suite) Test_Create_Order() {
 func (s *Suite) Test_Update_Order() {
 	var items []*model.ItemInput
 	item := &model.ItemInput{
-		Name:     "iPhone",
-		Quantity: 1,
+		ProductID: 1,
+		Quantity:  2,
 	}
 
 	items = append(items, item)
 
 	OrderDetails := model.OrderInput{
-		CustomerID:      10,
-		Item:            items,
-		Price:           5000.00,
-		DateOrderPlaced: time.Now(),
+		CustomerID: 10,
+		Item:       items,
+		Price:      5000.00,
 	}
 
 	s.mock.MatchExpectationsInOrder(false)
@@ -219,16 +215,6 @@ func (s *Suite) Test_DBConnection() {
 
 func TestHashPassword(t *testing.T) {
 
-	// t.Run("test password hash", func(t *testing.T) {
-	// 	password := "password12345"
-	// 	got := db.HashPassword(password)
-	// 	want := db.HashPassword(password)
-
-	// 	if got != want {
-	// 		t.Errorf("got %q want %q", got, want)
-	// 	}
-	// })
-
 	t.Run("compare password and hash", func(t *testing.T) {
 		password := "password12345"
 		hash := "$2a$14$fNPi4m0o8ooKCUYS4TlU3erQst453fiF.QvtFyKu2EtJGLDPG4kLG"
@@ -239,4 +225,26 @@ func TestHashPassword(t *testing.T) {
 		}
 	})
 
+}
+
+func (s *Suite) Test_Create_Product() {
+	ProductDetails := model.ProductInput{
+		Name:  "Xbox One S",
+		Price: 5000.00,
+	}
+	s.mock.ExpectQuery(regexp.QuoteMeta(
+		`INSERT INTO "product" ("id","name","price")
+			VALUES ($1,$2,$3)`))
+	s.repository.CreateProduct(ProductDetails)
+}
+
+func (s *Suite) Test_FindAllProducts() {
+
+	s.mock.MatchExpectationsInOrder(false)
+	s.mock.ExpectBegin()
+	s.mock.ExpectQuery(regexp.QuoteMeta(
+		`SELECT * FROM "product" `))
+	s.mock.ExpectCommit()
+
+	s.repository.FindProducts()
 }
