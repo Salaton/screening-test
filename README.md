@@ -8,17 +8,7 @@ These instructions will get you a copy of the project up and running on your loc
 
 ### Prerequisites
 
-This implementation assumes you have go and postgresql installed in your machine.
-
-### Installing Packages
-
-How to get the development env running
-
-```
-go get
-```
-
-This will fetch and install the go packages from the source repository
+This implementation assumes you have Go , Docker and postgresql installed in your machine.
 Add a `.env` file at the project root and add the following:
 
 ```
@@ -32,7 +22,31 @@ AFRICASTALKINGUSERNAME = <Your AT's Username>
 AFRICASTALKINGAPIKEY = <Your AT's API Key>
 ```
 
-## Running the service
+## Running the service using Docker
+Pull the image from docker hub using the following command
+```
+docker pull salaton/savannahtest:latest
+```
+Run it using 
+
+```
+docker run ---env-file <path-to-env-file-created> --network=host
+```
+After this, using your browser, access localhost on port `8080` to view the GraphQL playground;
+
+```
+http://localhost:8080/
+```
+
+## Running the service locally
+
+How to get the development env running
+
+```
+go get
+```
+
+This will fetch and install the go packages from the source repository
 
 To run the application, move to the project root directory and run:
 
@@ -48,7 +62,7 @@ http://localhost:8080/
 
 ### Running the mutations
 
-There are 5 mutations to run. `createCustomer` `login` `createOrder` `updateOrder` `deleteOrder`
+There are 6 mutations to run. `createCustomer` `createProduct` `login` `createOrder` `updateOrder` `deleteOrder`
 
 #### Create Customer
 
@@ -68,6 +82,18 @@ mutation {
     email
     phonenumber
     password
+  }
+}
+```
+#### Create Product
+
+Sample GraphQL Payload for creating a product. It returns a product type.
+
+```graphql
+mutation {
+  createProduct(input: { name: "Product one", price: 65500.50 }) {
+    name
+    Price
   }
 }
 ```
@@ -101,18 +127,22 @@ mutation {
   createOrder(
     input: {
       customer_id: 1
-      item: [{ name: "Item 1", quantity: 1 }, { name: "Item 2", quantity: 3 }]
-      price: 250000.00
-      date_order_placed: "1992-10-09T00:00:00Z"
+      item: [{ product_id: 2, quantity: 40 }]
+      price:500.00
     }
   ) {
+    id
     item {
-      name
+      product {
+        name
+        Price
+      }
+      product_id
       quantity
     }
-    price
   }
 }
+
 ```
 
 For this mutation, the customer needs to be authorized. The authorization header must be set. At the bottom of the graphQL playground, select `HTTP HEADERS` and fill this
@@ -152,25 +182,35 @@ query {
 
 #### Query Orders
 
-You can Query the customers in this payload as well.
+You can Query the customers using this payload as well.
 
 ```graphql
 query {
   orders {
     id
-    customer_id
-    item {
+    customer {
       name
+    }
+    item {
+      product_id
       quantity
     }
-    price
+    totalPrice
     date_order_placed
   }
 }
 ```
+#### Query Products
+```graphql
+query{
+  products{
+    name
+    Price
+  }
+}
+
+```
 
 ## Running the tests
 
-` go test -cover`
-
-[Salaton](https://github.com/Salaton)
+` go test -cover ./...`
