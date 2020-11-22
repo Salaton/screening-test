@@ -38,4 +38,4 @@ jobs:
         run: go build -v .
 
       - name: Test
-        run: cd tests && go test -v .
+        run: go test -v -cover ./...
