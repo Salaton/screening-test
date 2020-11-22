@@ -14,8 +14,6 @@ import (
 	"github.com/Salaton/screening-test/users"
 )
 
-var DB db.DBClient
-
 func (r *mutationResolver) Login(ctx context.Context, input model.LoginDetails) (string, error) {
 	var customer model.Customer
 	customer.Email = input.Email
@@ -47,6 +45,11 @@ func (r *mutationResolver) CreateOrder(ctx context.Context, input model.OrderInp
 	return &model.Order{}, nil
 }
 
+func (r *mutationResolver) CreateProduct(ctx context.Context, input model.ProductInput) (*model.Product, error) {
+	DB.CreateProduct(input)
+	return &model.Product{}, nil
+}
+
 func (r *mutationResolver) UpdateOrder(ctx context.Context, orderID *int, input model.OrderInput) (*model.Order, error) {
 	user := auth.ForContext(ctx)
 	if user == nil {
@@ -54,6 +57,7 @@ func (r *mutationResolver) UpdateOrder(ctx context.Context, orderID *int, input 
 	}
 	DB.UpdateOrder(*orderID, input)
 	return &model.Order{}, nil
+	// panic(fmt.Errorf("not implemented"))
 }
 
 func (r *mutationResolver) DeleteOrder(ctx context.Context, orderID int) (string, error) {
@@ -74,6 +78,10 @@ func (r *queryResolver) Orders(ctx context.Context) ([]*model.Order, error) {
 	return DB.FindOrders(), nil
 }
 
+func (r *queryResolver) Products(ctx context.Context) ([]*model.Product, error) {
+	return DB.FindProducts(), nil
+}
+
 // Mutation returns generated.MutationResolver implementation.
 func (r *Resolver) Mutation() generated.MutationResolver { return &mutationResolver{r} }
 
@@ -89,3 +97,4 @@ type queryResolver struct{ *Resolver }
 //  - When renaming or deleting a resolver the old code will be put in here. You can safely delete
 //    it when you're done.
 //  - You have helper methods in this file. Move them out to keep these resolver files clean.
+var DB db.DBClient
