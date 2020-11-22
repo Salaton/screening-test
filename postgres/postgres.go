@@ -5,7 +5,7 @@ import (
 	"time"
 
 	model "github.com/Salaton/screening-test/graph/model"
-	notification "github.com/Salaton/screening-test/notification"
+	"github.com/Salaton/screening-test/notification"
 
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -16,11 +16,13 @@ type DBClient interface {
 	Open(dbConnString string) error
 	CreateOrder(model.OrderInput)
 	CreateCustomer(model.CustomerInput)
+	CreateProduct(model.ProductInput)
 	Authenticate(model.LoginDetails) bool
 	GetCustomerID(email string) (int, error)
 	GetCustomer(email string) (model.Customer, error)
 	FindCustomers() []*model.Customer
 	FindOrders() []*model.Order
+	FindProducts() []*model.Product
 	DeleteOrder(id int)
 	UpdateOrder(orderID int, order model.OrderInput)
 }
@@ -44,11 +46,12 @@ func (ps *PostgresClient) Open(dbConnString string) error {
 		return err
 	}
 	// Create Customer, Item and Order tables..
-	ps.db.AutoMigrate(&model.Customer{}, &model.Order{}, &model.Item{})
+	ps.db.AutoMigrate(&model.Customer{}, &model.Order{}, &model.Product{}, &model.OrderItem{})
 
 	return nil
 }
 
+// GetCustomer method to find a particular customer based on their email
 func (ps *PostgresClient) GetCustomer(email string) (model.Customer, error) {
 	var customer model.Customer
 	row := ps.db.Table("customers").Where("email = ?", email).Select("id,name,phonenumber,email,").Row()
@@ -67,30 +70,35 @@ func (ps *PostgresClient) GetCustomerID(email string) (int, error) {
 	return id, nil
 }
 
+// CreateOrder method that creates an order and sends a notification to the user
 func (ps *PostgresClient) CreateOrder(order model.OrderInput) {
 	var customer model.Customer
+
 	if err := ps.db.Create(&model.Order{
 		CustomerID:      order.CustomerID,
 		Item:            loopOverItems(order.Item),
-		Price:           order.Price,
+		TotalPrice:      order.Price,
 		DateOrderPlaced: time.Now(),
 	}).Error; err != nil {
 		log.Printf("Something went wrong %v", err.Error())
 	}
-	// Use GORM API build SQL
+
 	row := ps.db.Table("customers").Where("id = ?", order.CustomerID).Select("phonenumber", "name").Row()
 	row.Scan(&customer.Phonenumber, &customer.Name)
 	notification.SendNotification(customer.Name, customer.Phonenumber)
 
 }
 
+// UpdateOrder method that takes in an order ID and updates the selected order
+// then sends a notification
 func (ps *PostgresClient) UpdateOrder(orderID int, order model.OrderInput) {
 	var customer model.Customer
+
 	if err := ps.db.Updates(&model.Order{
 		ID:              orderID,
 		CustomerID:      order.CustomerID,
 		Item:            loopOverItems(order.Item),
-		Price:           order.Price,
+		TotalPrice:      order.Price,
 		DateOrderPlaced: time.Now(),
 	}).Error; err != nil {
 		log.Printf("Something went wrong %v", err.Error())
@@ -102,11 +110,23 @@ func (ps *PostgresClient) UpdateOrder(orderID int, order model.OrderInput) {
 
 }
 
+// DeleteOrder to delete an order based on the passed order id
 func (ps *PostgresClient) DeleteOrder(id int) {
-	ps.db.Where("order_id = ?", id).Delete(&model.Item{})
+	ps.db.Where("order_id = ?", id).Delete(&model.OrderItem{})
 	ps.db.Delete(&model.Order{}, id)
 }
 
+// CreateProduct to create an order
+func (ps *PostgresClient) CreateProduct(product model.ProductInput) {
+	if err := ps.db.Create(&model.Product{
+		Name:  product.Name,
+		Price: product.Price,
+	}).Error; err != nil {
+		log.Printf("Something went wrong %v", err.Error())
+	}
+}
+
+// CreateCustomer to create and store a customer in the DB
 func (ps *PostgresClient) CreateCustomer(customer model.CustomerInput) {
 	if err := ps.db.Create(&model.Customer{
 		Name:        customer.Name,
@@ -118,6 +138,16 @@ func (ps *PostgresClient) CreateCustomer(customer model.CustomerInput) {
 	}
 }
 
+// FindProducts method to return all products stores in the db
+func (ps *PostgresClient) FindProducts() []*model.Product {
+	var product []*model.Product
+	if err := ps.db.Table("products").Find(&product).Error; err != nil {
+		log.Printf("Something bad happened %v", err.Error())
+	}
+	return product
+}
+
+// FindCustomers method to query and return all stored customers
 func (ps *PostgresClient) FindCustomers() []*model.Customer {
 	var customer []*model.Customer
 	if err := ps.db.Table("customers").Find(&customer).Error; err != nil {
