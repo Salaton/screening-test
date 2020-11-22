@@ -14,16 +14,26 @@ type Order {
   customer: Customer!
   customer_id: Int!
   # An order can have many items (one to many relationship)
-  item: [Item!]!
-  price: Float!
+  item: [OrderItem!]!
+  totalPrice:Float!
   date_order_placed: Time!
 }
 
-type Item {
-  id: Int!
+type OrderItem {
+  id:Int!
+  # Relationship to order
   order: Order!
-  name: String!
-  quantity: Int!
+  # Relationship to Product
+  product:Product!
+  # product_name:String!
+  product_id:Int!
+  quantity:Int!
+}
+
+type Product{
+  id:Int!
+  name:String!
+  Price:Float!
 }
 
 input loginDetails {
@@ -41,12 +51,16 @@ input customerInput {
 input orderInput {
   customer_id: Int!
   item: [ItemInput]!
-  price: Float!
-  date_order_placed: Time!
+  price:Float!
+}
+
+input productInput {
+  name:String!
+  price:Float!
 }
 
 input ItemInput {
-  name: String!
+  product_id: Int!
   quantity: Int!
 }
 
@@ -56,6 +70,7 @@ type Mutation {
   login(input: loginDetails!): String!
   createCustomer(input: customerInput!): Customer!
   createOrder(input: orderInput!): Order!
+  createProduct(input:productInput!):Product!
   updateOrder(orderID: Int, input: orderInput!): Order!
   deleteOrder(orderID: Int!): String!
 }
@@ -63,4 +78,5 @@ type Mutation {
 type Query {
   customers: [Customer!]!
   orders: [Order!]!
+  products:[Product!]!
 }

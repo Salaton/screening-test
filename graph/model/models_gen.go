@@ -14,26 +14,33 @@ type Customer struct {
 	Password    string `json:"password"`
 }
 
-type Item struct {
-	ID       int    `json:"id"`
-	Order    *Order `json:"order" gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"`
-	Name     string `json:"name"`
-	Quantity int    `json:"quantity"`
-	OrderID  int    `json:"-" gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"`
-}
-
 type ItemInput struct {
-	Name     string `json:"name"`
-	Quantity int    `json:"quantity"`
+	ProductID int `json:"product_id"`
+	Quantity  int `json:"quantity"`
 }
 
 type Order struct {
-	ID              int       `json:"id"`
-	Customer        *Customer `json:"customer"`
-	CustomerID      int       `json:"customer_id"`
-	Item            []*Item   `json:"item" gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"`
-	Price           float64   `json:"price"`
-	DateOrderPlaced time.Time `json:"date_order_placed"`
+	ID              int          `json:"id"`
+	Customer        *Customer    `json:"customer"`
+	CustomerID      int          `json:"customer_id"`
+	Item            []*OrderItem `json:"item"`
+	TotalPrice      float64      `json:"totalPrice"`
+	DateOrderPlaced time.Time    `json:"date_order_placed"`
+}
+
+type OrderItem struct {
+	ID        int      `json:"id"`
+	Order     *Order   `json:"order"`
+	Product   *Product `json:"product"`
+	ProductID int      `json:"product_id"`
+	Quantity  int      `json:"quantity"`
+	OrderID   int      `json:"-" gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"`
+}
+
+type Product struct {
+	ID    int     `json:"id"`
+	Name  string  `json:"name"`
+	Price float64 `json:"Price"`
 }
 
 type CustomerInput struct {
@@ -49,8 +56,12 @@ type LoginDetails struct {
 }
 
 type OrderInput struct {
-	CustomerID      int          `json:"customer_id"`
-	Item            []*ItemInput `json:"item"`
-	Price           float64      `json:"price"`
-	DateOrderPlaced time.Time    `json:"date_order_placed"`
+	CustomerID int          `json:"customer_id"`
+	Item       []*ItemInput `json:"item"`
+	Price      float64      `json:"price"`
+}
+
+type ProductInput struct {
+	Name  string  `json:"name"`
+	Price float64 `json:"price"`
 }
