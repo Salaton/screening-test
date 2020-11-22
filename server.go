@@ -43,8 +43,6 @@ func main() {
 	router.Handle("/", handler.Playground("GraphQL playground", "/query"))
 	router.Handle("/query", srv)
 
-	// srv := handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &graph.Resolver{}}))
-
 	log.Printf("connect to http://localhost:%s/ for GraphQL playground", port)
 	log.Fatal(http.ListenAndServe(":"+port, router))
 }
@@ -54,12 +52,8 @@ func InitDB() (db.DBClient, error) {
 	graph.DB = &db.PostgresClient{}
 	user := os.Getenv("DB_USER")
 	password := os.Getenv("DB_PASSWORD")
-	// port := os.Getenv("DB_PORT")
 	dbname := os.Getenv("DB_NAME")
 	host := os.Getenv("DB_HOST")
-	// sslmode := os.Getenv("SSLMODE")
-	// TimeZone := os.Getenv("TimeZone")
 	dsn := "user=" + user + " password=" + password + " host=" + host + " dbname=" + dbname
-	// dsn := "user=sala password=$krychowiak-254$ dbname=savannahtest port=5432 sslmode=disable TimeZone=Africa/Nairobi"
 	return graph.DB, graph.DB.Open(dsn)
 }

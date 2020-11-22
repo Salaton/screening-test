@@ -6,13 +6,13 @@ import (
 )
 
 // This file contains all functions that are used in the postgres.go file
-//Loops over the items and map them to the Item Struct
-func loopOverItems(itemsInput []*model.ItemInput) []*model.Item {
-	var items []*model.Item
+//Loops over the items and map them to the OrderItem Struct
+func loopOverItems(itemsInput []*model.ItemInput) []*model.OrderItem {
+	var items []*model.OrderItem
 	for _, itemInput := range itemsInput {
-		items = append(items, &model.Item{
-			Name:     itemInput.Name,
-			Quantity: itemInput.Quantity,
+		items = append(items, &model.OrderItem{
+			ProductID: itemInput.ProductID,
+			Quantity:  itemInput.Quantity,
 		})
 	}
 	return items
