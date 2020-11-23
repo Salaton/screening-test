@@ -45,7 +45,7 @@ func (ps *PostgresClient) Open(dbConnString string) error {
 	if err != nil {
 		return err
 	}
-	// Create Customer, Item and Order tables..
+	// Create Customer, Product, OrderItem and Order tables..
 	ps.db.AutoMigrate(&model.Customer{}, &model.Order{}, &model.Product{}, &model.OrderItem{})
 
 	return nil
